@@ -25,20 +25,11 @@ if __name__ == "__main__":
     for angle in np.linspace(75, 70, 30):
         angles.append(float(angle))
 
-    for angle in np.linspace(70, 70, 20):
-        angles.append(float(angle))
-
-    for angle in np.linspace(70, 70, 12):
-        angles.append(float(angle))
-
-    for angle in np.linspace(70, 70, 35):
+    for angle in np.linspace(70, 70, 67):
         angles.append(float(angle))
 
     for angle in np.linspace(70, 80, 20):
         angles.append(float(angle))
-
-    # for angle in np.linspace(80, 80, 10):
-    #     angles.append(float(angle))
 
     for angle in np.linspace(80, 110, 10):
         angles.append(float(angle))
@@ -54,6 +45,7 @@ if __name__ == "__main__":
 
     for angle in np.linspace(95, 90, 10):
         angles.append(float(angle))
+
     for angle in np.linspace(90, 90, 5):
         angles.append(float(angle))
 
