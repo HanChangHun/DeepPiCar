@@ -16,6 +16,7 @@ camera = cv2.VideoCapture(-1)
 camera.set(3, 320)
 camera.set(4, 180)
 
+
 def init_car():
     back_wheels.speed = 0
     # back_wheels.forward()
@@ -35,13 +36,11 @@ def cleanup():
     camera.release()
     cv2.destroyAllWindows()
 
+
 def write_data(idx):
     _, image = camera.read()
     cv2.imwrite(f"train_data_generation/data/frame_{idx}.png", image)
-    # show_image(image)
 
-def show_image(image):
-    cv2.imshow("cam", image)
 
 def main():
     init_car()
@@ -53,4 +52,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
