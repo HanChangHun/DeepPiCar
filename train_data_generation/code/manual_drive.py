@@ -1,14 +1,17 @@
 import time
+import json
 from pathlib import Path
 
 import cv2
 import picar
 import numpy as np
 
+with open("train_data_generation/code/steer_angles.json", "r") as f:
+    angles = json.load(f)
 
 back_wheels = picar.back_wheels.Back_Wheels()
 front_wheels = picar.front_wheels.Front_Wheels()
-front_wheels.offset = 20
+front_wheels.turning_offset = 0
 
 picar.setup()
 
@@ -24,10 +27,17 @@ def init_car():
     front_wheels.turn(90)
 
 
-def go_front(speed, duration):
+def init_cam():
+    for _ in range(50):
+        _, image = camera.read()
+
+
+def go_front(speed, duration, turn=90):
+    front_wheels.turn(turn)
     back_wheels.speed = speed
     time.sleep(duration)
-    back_wheels.speed = 0
+    # back_wheels.speed = 0
+    # time.sleep(0.1)
 
 
 def cleanup():
@@ -39,13 +49,17 @@ def cleanup():
 
 def write_data(idx):
     _, image = camera.read()
-    cv2.imwrite(f"train_data_generation/data/frame_{idx}.png", image)
+    cv2.imwrite(
+        f"train_data_generation/data/frame_{idx:06}_{round(angles[idx], 2)}.png", image
+    )
 
 
 def main():
     init_car()
-    for idx in range(10):
-        go_front(20, 0.5)
+    init_cam()
+    for idx in range(len(angles)):
+        # for idx in range(1):
+        go_front(40, 0.01, angles[idx])
         write_data(idx)
     cleanup()
 
