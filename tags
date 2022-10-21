@@ -1,0 +1,199 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_OUTPUT_FILESEP	slash	/slash or backslash/
+!_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
+!_TAG_PATTERN_LENGTH_LIMIT	96	/0 for no limit/
+!_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
+!_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
+!_TAG_PROGRAM_URL	https://ctags.io/	/official site/
+!_TAG_PROGRAM_VERSION	0.0.0	//
+######################################	doc/SDC Instruction.md	/^# ######################################$/;"	c
+<     circles = cv2.HoughCircles(red_hue_image, cv.CV_HOUGH_GRADIENT, 1, 120, 100, 20, 10, 0);	doc/SDC Instruction.md	/^<     circles = cv2.HoughCircles(red_hue_image, cv.CV_HOUGH_GRADIENT, 1, 120, 100, 20, 10, 0);$/;"	s	chapter:Step 4: modify ball_tracker3.py
+<br>	doc/DeepPiCar-Guide-Part-2.md	/^#### <br> $/;"	t	subsection:Hardware Set up
+An overview of how to build a Raspberry Pi and TensorFlow powered, self-driving robotic car	README.md	/^## An overview of how to build a Raspberry Pi and TensorFlow powered, self-driving robotic car$/;"	s	chapter:DeepPiCar — Part 1: How to Build a Deep Learning, Self Driving Robotic Car on a Shoestring Budget
+Buy Hardware	doc/SDC Instruction.md	/^## Buy Hardware$/;"	s	chapter:Self Driving Pi Car Setup Log
+By [David Tian](https://towardsdatascience.com/@dctian)	README.md	/^### By [David Tian](https:\/\/towardsdatascience.com\/@dctian)$/;"	S	section:DeepPiCar — Part 1: How to Build a Deep Learning, Self Driving Robotic Car on a Shoestring Budget""An overview of how to build a Raspberry Pi and TensorFlow powered, self-driving robotic car
+Convert PiCar's Server python code to run in python 3 (instead of Python 2)	doc/SDC Instruction.md	/^# Convert PiCar's Server python code to run in python 3 (instead of Python 2)$/;"	c
+DeepPiCar	refs/opencv_driver/code/deep_pi_car.py	/^class DeepPiCar(object):$/;"	c
+DeepPiCar — Part 1: How to Build a Deep Learning, Self Driving Robotic Car on a Shoestring Budget	README.md	/^# DeepPiCar — Part 1: How to Build a Deep Learning, Self Driving Robotic Car on a Shoestring B/;"	c
+DeepPiCar: How to Build a Deep Learning, Self Driving Robotic Car on a	doc/DeepPiCar-Guide-Part-1.md	/^### DeepPiCar: How to Build a Deep Learning, Self Driving Robotic Car on a$/;"	S
+DeepPiCar: How to Build a Deep Learning, Self Driving Robotic Car on a	doc/DeepPiCar-Guide-Part-2.md	/^### DeepPiCar: How to Build a Deep Learning, Self Driving Robotic Car on a$/;"	S
+ET	refs/dnn_models/object_detection/code/xml_to_csv.py	/^import xml.etree.ElementTree as ET$/;"	I
+Edge TPU object detection transfer learning tutorial	doc/SDC Instruction.md	/^# Edge TPU object detection transfer learning tutorial$/;"	c
+EndToEndLaneFollower	refs/opencv_driver/code/end_to_end_lane_follower.py	/^class EndToEndLaneFollower(object):$/;"	c
+FLAGS	refs/dnn_models/object_detection/code/generate_tfrecord.py	/^FLAGS = flags.FLAGS$/;"	v
+Further Thoughts [Optional]	doc/DeepPiCar-Guide-Part-1.md	/^### Further Thoughts [Optional]$/;"	S
+GreenTrafficLight	refs/opencv_driver/code/traffic_objects.py	/^class GreenTrafficLight(TrafficObject):$/;"	c
+HandCodedLaneFollower	refs/opencv_driver/code/hand_coded_lane_follower.py	/^class HandCodedLaneFollower(object):$/;"	c
+Hardware Set up	doc/DeepPiCar-Guide-Part-2.md	/^### Hardware Set up$/;"	S
+Hardware Setup Guide	doc/DeepPiCar-Guide-Part-2.md	/^### Hardware Setup Guide$/;"	S
+Hardware Supply List	doc/DeepPiCar-Guide-Part-2.md	/^### Hardware Supply List$/;"	S
+How to train an object detection model with Tensorflow?	doc/SDC Instruction.md	/^# How to train an object detection model with Tensorflow?$/;"	c
+Install OS	doc/SDC Instruction.md	/^### Install OS$/;"	S	section:Self Driving Pi Car Setup Log""Set up Raspberry Pi
+Install Pi Camera	doc/SDC Instruction.md	/^### Install Pi Camera $/;"	S	section:Self Driving Pi Car Setup Log""Set up Raspberry Pi
+Install USB Camera	doc/DeepPiCar-Guide-Part-2.md	/^#### Install USB Camera$/;"	t	subsection:Hardware Set up
+Install USB Camera	doc/SDC Instruction.md	/^### Install USB Camera$/;"	S	section:Self Driving Pi Car Setup Log""Set up Raspberry Pi
+Introduction	README.md	/^### Introduction$/;"	S	section:DeepPiCar — Part 1: How to Build a Deep Learning, Self Driving Robotic Car on a Shoestring Budget""An overview of how to build a Raspberry Pi and TensorFlow powered, self-driving robotic car
+Introduction	doc/DeepPiCar-Guide-Part-1.md	/^### Introduction$/;"	S
+ModelRunner	model_runner.py	/^class ModelRunner:$/;"	c
+Object Detection	doc/SDC Instruction.md	/^### Object Detection$/;"	S	section:Self Driving Pi Car Setup Log""Set up Raspberry Pi
+ObjectsOnRoadProcessor	refs/opencv_driver/code/objects_on_road_processor.py	/^class ObjectsOnRoadProcessor(object):$/;"	c
+Our Road Map	README.md	/^### Our Road Map$/;"	S	section:DeepPiCar — Part 1: How to Build a Deep Learning, Self Driving Robotic Car on a Shoestring Budget""An overview of how to build a Raspberry Pi and TensorFlow powered, self-driving robotic car
+Our Road Map	doc/DeepPiCar-Guide-Part-1.md	/^### Our Road Map$/;"	S
+Person	refs/opencv_driver/code/traffic_objects.py	/^class Person(TrafficObject):$/;"	c
+Prerequisite	README.md	/^### Prerequisite$/;"	S	section:DeepPiCar — Part 1: How to Build a Deep Learning, Self Driving Robotic Car on a Shoestring Budget""An overview of how to build a Raspberry Pi and TensorFlow powered, self-driving robotic car
+Prerequisite	doc/DeepPiCar-Guide-Part-1.md	/^### Prerequisite$/;"	S
+Raspberry Pi Operating System Set up (1 Hour)	doc/DeepPiCar-Guide-Part-2.md	/^#### Raspberry Pi Operating System Set up (1 Hour)$/;"	t	subsection:Hardware Set up
+RedTrafficLight	refs/opencv_driver/code/traffic_objects.py	/^class RedTrafficLight(TrafficObject):$/;"	c
+Run wheel test (use python for v2 and python3 for v3)	doc/SDC Instruction.md	/^# Run wheel test (use python for v2 and python3 for v3)$/;"	c
+Running Live Object Detection with TPU	doc/SDC Instruction.md	/^### Running Live Object Detection with TPU$/;"	S	section:Self Driving Pi Car Setup Log""Set up Raspberry Pi
+Self Driving Pi Car Setup Log	doc/SDC Instruction.md	/^# Self Driving Pi Car Setup Log$/;"	c
+Set up Raspberry Pi	doc/SDC Instruction.md	/^## Set up Raspberry Pi$/;"	s	chapter:Self Driving Pi Car Setup Log
+Setup Edge TPU	doc/SDC Instruction.md	/^### Setup Edge TPU$/;"	S	section:Self Driving Pi Car Setup Log""Set up Raspberry Pi
+Setup Remote Access	doc/DeepPiCar-Guide-Part-2.md	/^#### Setup Remote Access$/;"	t	subsection:Hardware Set up
+Setup Remote Access	doc/SDC Instruction.md	/^### Setup Remote Access$/;"	S	section:Self Driving Pi Car Setup Log""Set up Raspberry Pi
+Setup TensorFlow and OpenCV	doc/SDC Instruction.md	/^### Setup TensorFlow and OpenCV$/;"	S	section:Self Driving Pi Car Setup Log""Set up Raspberry Pi
+SpeedLimit	refs/opencv_driver/code/traffic_objects.py	/^class SpeedLimit(TrafficObject):$/;"	c
+Step 1: Back up the picar 3.5 package code	doc/SDC Instruction.md	/^# Step 1: Back up the picar 3.5 package code$/;"	c
+Step 2: Do the standard python 2 to python 3 conversion	doc/SDC Instruction.md	/^# Step 2: Do the standard python 2 to python 3 conversion$/;"	c
+Step 3: copy ball_tracker.py to ball_tracker3.py	doc/SDC Instruction.md	/^# Step 3: copy ball_tracker.py to ball_tracker3.py$/;"	c
+Step 4: modify ball_tracker3.py	doc/SDC Instruction.md	/^# Step 4: modify ball_tracker3.py$/;"	c
+Step 5: Run	doc/SDC Instruction.md	/^# Step 5: Run $/;"	c
+StopSign	refs/opencv_driver/code/traffic_objects.py	/^class StopSign(TrafficObject):$/;"	c
+SunFounder PiCar-V Assembly	doc/DeepPiCar-Guide-Part-2.md	/^#### SunFounder PiCar-V Assembly$/;"	t	subsection:Hardware Set up
+SunFounder PiCar-V Software Configuration (Deviations from the manual)	doc/DeepPiCar-Guide-Part-2.md	/^#### SunFounder PiCar-V Software Configuration (Deviations from the manual)$/;"	t	subsection:Hardware Set up
+Table of Content	doc/SDC Instruction.md	/^### Table of Content$/;"	S	section:Self Driving Pi Car Setup Log""Set up Raspberry Pi
+TrafficObject	refs/opencv_driver/code/traffic_objects.py	/^class TrafficObject(object):$/;"	c
+Transfer Learning	doc/SDC Instruction.md	/^### Transfer Learning$/;"	S	section:Self Driving Pi Car Setup Log""Set up Raspberry Pi
+Useful Links	doc/SDC Instruction.md	/^### Useful Links$/;"	S	section:Self Driving Pi Car Setup Log""Set up Raspberry Pi
+What’s Next	README.md	/^### What’s Next$/;"	S	section:DeepPiCar — Part 1: How to Build a Deep Learning, Self Driving Robotic Car on a Shoestring Budget""An overview of how to build a Raspberry Pi and TensorFlow powered, self-driving robotic car
+What’s Next	doc/DeepPiCar-Guide-Part-1.md	/^### What’s Next$/;"	S
+What’s Next	doc/DeepPiCar-Guide-Part-2.md	/^### What’s Next$/;"	S
+When the Rubber Hits the Road!	doc/DeepPiCar-Guide-Part-2.md	/^#### When the Rubber Hits the Road!$/;"	t	subsection:Hardware Set up
+[DeepPiCar Series](https://towardsdatascience.com/tagged/deep-pi-car)	README.md	/^#### [DeepPiCar Series](https:\/\/towardsdatascience.com\/tagged\/deep-pi-car)$/;"	t
+_SHOW_IMAGE	refs/opencv_driver/code/deep_pi_car.py	/^_SHOW_IMAGE = True$/;"	v
+_SHOW_IMAGE	refs/opencv_driver/code/end_to_end_lane_follower.py	/^_SHOW_IMAGE = False$/;"	v
+_SHOW_IMAGE	refs/opencv_driver/code/get_mask_val.py	/^_SHOW_IMAGE = True$/;"	v
+_SHOW_IMAGE	refs/opencv_driver/code/hand_coded_lane_follower.py	/^_SHOW_IMAGE = False$/;"	v
+_SHOW_IMAGE	refs/opencv_driver/code/objects_on_road_processor.py	/^_SHOW_IMAGE = False$/;"	v
+__INITIAL_SPEED	refs/opencv_driver/code/deep_pi_car.py	/^    __INITIAL_SPEED = 0$/;"	v	class:DeepPiCar	file:
+__SCREEN_HEIGHT	refs/opencv_driver/code/deep_pi_car.py	/^    __SCREEN_HEIGHT = 180$/;"	v	class:DeepPiCar	file:
+__SCREEN_WIDTH	refs/opencv_driver/code/deep_pi_car.py	/^    __SCREEN_WIDTH = 320$/;"	v	class:DeepPiCar	file:
+__enter__	refs/opencv_driver/code/deep_pi_car.py	/^    def __enter__(self):$/;"	m	class:DeepPiCar
+__exit__	refs/opencv_driver/code/deep_pi_car.py	/^    def __exit__(self, _type, value, traceback):$/;"	m	class:DeepPiCar
+__init__	model_runner.py	/^    def __init__(self, model_paths):$/;"	m	class:ModelRunner
+__init__	refs/opencv_driver/code/deep_pi_car.py	/^    def __init__(self):$/;"	m	class:DeepPiCar
+__init__	refs/opencv_driver/code/end_to_end_lane_follower.py	/^    def __init__(self,$/;"	m	class:EndToEndLaneFollower
+__init__	refs/opencv_driver/code/hand_coded_lane_follower.py	/^    def __init__(self, car=None):$/;"	m	class:HandCodedLaneFollower
+__init__	refs/opencv_driver/code/objects_on_road_processor.py	/^    def __init__(self,$/;"	m	class:ObjectsOnRoadProcessor
+__init__	refs/opencv_driver/code/traffic_objects.py	/^    def __init__(self, speed_limit):$/;"	m	class:SpeedLimit
+__init__	refs/opencv_driver/code/traffic_objects.py	/^    def __init__(self, wait_time_in_sec=3, min_no_stop_sign=20):$/;"	m	class:StopSign
+allocate_tensors_all_interpreter	model_runner.py	/^    def allocate_tensors_all_interpreter(self):$/;"	m	class:ModelRunner
+average_slope_intercept	refs/opencv_driver/code/hand_coded_lane_follower.py	/^def average_slope_intercept(frame, line_segments):$/;"	f
+back_wheels	train_data_generation/code/manual_drive.py	/^back_wheels = picar.back_wheels.Back_Wheels()$/;"	v
+cam	refs/opencv_driver/code/save_road_image.py	/^cam = cv2.VideoCapture(0)$/;"	v
+cleanup	refs/opencv_driver/code/deep_pi_car.py	/^    def cleanup(self):$/;"	m	class:DeepPiCar
+cleanup	train_data_generation/code/manual_drive.py	/^def cleanup():$/;"	f
+clear	refs/opencv_driver/code/traffic_objects.py	/^    def clear(self):$/;"	m	class:StopSign
+compute_steering_angle	refs/opencv_driver/code/end_to_end_lane_follower.py	/^    def compute_steering_angle(self, frame):$/;"	m	class:EndToEndLaneFollower
+compute_steering_angle	refs/opencv_driver/code/hand_coded_lane_follower.py	/^def compute_steering_angle(frame, lane_lines):$/;"	f
+control_car	refs/opencv_driver/code/objects_on_road_processor.py	/^    def control_car(self, objects):$/;"	m	class:ObjectsOnRoadProcessor
+create_tf_example	refs/dnn_models/object_detection/code/generate_tfrecord.py	/^def create_tf_example(group, path, label_map):$/;"	f
+create_video_recorder	refs/opencv_driver/code/deep_pi_car.py	/^    def create_video_recorder(self, path):$/;"	m	class:DeepPiCar
+detect_edges	refs/opencv_driver/code/get_mask_val.py	/^def detect_edges(frame):$/;"	f
+detect_edges	refs/opencv_driver/code/hand_coded_lane_follower.py	/^def detect_edges(frame):$/;"	f
+detect_lane	refs/opencv_driver/code/hand_coded_lane_follower.py	/^def detect_lane(frame):$/;"	f
+detect_line_segments	refs/opencv_driver/code/get_mask_val.py	/^def detect_line_segments(cropped_edges):$/;"	f
+detect_line_segments	refs/opencv_driver/code/hand_coded_lane_follower.py	/^def detect_line_segments(cropped_edges):$/;"	f
+detect_objects	refs/opencv_driver/code/objects_on_road_processor.py	/^    def detect_objects(self, frame):$/;"	m	class:ObjectsOnRoadProcessor
+display_heading_line	refs/opencv_driver/code/end_to_end_lane_follower.py	/^def display_heading_line(frame, steering_angle, line_color=(0, 0, 255), line_width=5, ):$/;"	f
+display_heading_line	refs/opencv_driver/code/hand_coded_lane_follower.py	/^def display_heading_line(frame, steering_angle, line_color=(0, 0, 255), line_width=5, ):$/;"	f
+display_lines	refs/opencv_driver/code/get_mask_val.py	/^def display_lines(frame, lines, line_color=(0, 255, 0), line_width=10):$/;"	f
+display_lines	refs/opencv_driver/code/hand_coded_lane_follower.py	/^def display_lines(frame, lines, line_color=(0, 255, 0), line_width=10):$/;"	f
+drive	refs/opencv_driver/code/deep_pi_car.py	/^    def drive(self, speed=__INITIAL_SPEED):$/;"	m	class:DeepPiCar
+flags	refs/dnn_models/object_detection/code/generate_tfrecord.py	/^flags = tf.app.flags$/;"	v
+follow_lane	refs/opencv_driver/code/deep_pi_car.py	/^    def follow_lane(self, image):$/;"	m	class:DeepPiCar
+follow_lane	refs/opencv_driver/code/end_to_end_lane_follower.py	/^    def follow_lane(self, frame):$/;"	m	class:EndToEndLaneFollower
+follow_lane	refs/opencv_driver/code/hand_coded_lane_follower.py	/^    def follow_lane(self, frame):$/;"	m	class:HandCodedLaneFollower
+frame	refs/opencv_driver/code/save_road_image.py	/^    ret, frame = cam.read()$/;"	v
+front_wheels	train_data_generation/code/manual_drive.py	/^front_wheels = picar.front_wheels.Front_Wheels()$/;"	v
+get_objects	model_runner.py	/^    def get_objects(self, score_threshold=-float("inf"), image_scale=(1.0, 1.0)):$/;"	m	class:ModelRunner
+get_result	model_runner.py	/^    def get_result(self, top_n=1, detect=False, image_scale=(1.0, 1.0)):$/;"	m	class:ModelRunner
+go_front	train_data_generation/code/manual_drive.py	/^def go_front(speed, duration):$/;"	f
+img_counter	refs/opencv_driver/code/save_road_image.py	/^img_counter = 0$/;"	v
+img_name	refs/opencv_driver/code/save_road_image.py	/^        img_name = "driver\/data\/road{}.png".format(img_counter)$/;"	v
+img_preprocess	refs/opencv_driver/code/end_to_end_lane_follower.py	/^def img_preprocess(image):$/;"	f
+init_car	train_data_generation/code/manual_drive.py	/^def init_car():$/;"	f
+input_file	model_runner.py	/^input_file = "models\/object_detection\/data\/images\/train\/2019-04-16-095702.jpg"$/;"	v
+invoke	model_runner.py	/^    def invoke(self, interpreter, profile=False):$/;"	m	class:ModelRunner
+invoke_all	model_runner.py	/^    def invoke_all(self, task=None):$/;"	m	class:ModelRunner
+invoke_and_next	model_runner.py	/^    def invoke_and_next(self, task=None):$/;"	m	class:ModelRunner
+invoke_idx	model_runner.py	/^    def invoke_idx(self, idx, task=None, profile=False):$/;"	m	class:ModelRunner
+is_close_by	refs/opencv_driver/code/traffic_objects.py	/^    def is_close_by(obj, frame_height, min_height_pct=0.05):$/;"	m	class:TrafficObject
+jupyter.notebookFileRoot	.vscode/settings.json	/^    "jupyter.notebookFileRoot": "${workspaceFolder}",$/;"	s
+k	refs/opencv_driver/code/save_road_image.py	/^    k = cv2.waitKey(1)$/;"	v
+labels	model_runner.py	/^labels = read_label_file($/;"	v
+length_of_line_segment	refs/opencv_driver/code/hand_coded_lane_follower.py	/^def length_of_line_segment(line):$/;"	f
+main	refs/dnn_models/object_detection/code/coco_object_detection.py	/^def main():$/;"	f
+main	refs/dnn_models/object_detection/code/generate_tfrecord.py	/^def main(_):$/;"	f
+main	refs/dnn_models/object_detection/code/object_detection_usb.py	/^def main():$/;"	f
+main	refs/dnn_models/object_detection/code/xml_to_csv.py	/^def main():$/;"	f
+main	refs/opencv_driver/code/deep_pi_car.py	/^def main():$/;"	f
+main	refs/opencv_driver/code/driver_main.py	/^def main():$/;"	f
+main	refs/opencv_driver/code/get_mask_val.py	/^def main():$/;"	f
+main	refs/opencv_driver/code/opencv_test.py	/^def main():$/;"	f
+main	train_data_generation/code/manual_drive.py	/^def main():$/;"	f
+make	model_runner.py	/^        def make(i):$/;"	f	member:ModelRunner.get_objects	file:
+make_interpreters	model_runner.py	/^    def make_interpreters(self):$/;"	m	class:ModelRunner
+make_points	refs/opencv_driver/code/hand_coded_lane_follower.py	/^def make_points(frame, line):$/;"	f
+notebook.output.textLineLimit	.vscode/settings.json	/^    "notebook.output.textLineLimit": 500$/;"	n
+np	model_runner.py	/^import numpy as np$/;"	I
+np	refs/dnn_models/object_detection/code/coco_object_detection.py	/^import numpy as np$/;"	I
+np	refs/dnn_models/object_detection/code/object_detection_usb.py	/^import numpy as np$/;"	I
+np	refs/opencv_driver/code/end_to_end_lane_follower.py	/^import numpy as np$/;"	I
+np	refs/opencv_driver/code/get_mask_val.py	/^import numpy as np$/;"	I
+np	refs/opencv_driver/code/hand_coded_lane_follower.py	/^import numpy as np$/;"	I
+np	train_data_generation/code/manual_drive.py	/^import numpy as np$/;"	I
+pd	refs/dnn_models/object_detection/code/generate_tfrecord.py	/^import pandas as pd$/;"	I
+pd	refs/dnn_models/object_detection/code/xml_to_csv.py	/^import pandas as pd$/;"	I
+process_objects_on_road	refs/opencv_driver/code/objects_on_road_processor.py	/^    def process_objects_on_road(self, frame):$/;"	m	class:ObjectsOnRoadProcessor
+python 2.7 package location	doc/SDC Instruction.md	/^# python 2.7 package location$/;"	c
+region_of_interest	refs/opencv_driver/code/get_mask_val.py	/^def region_of_interest(canny):$/;"	f
+region_of_interest	refs/opencv_driver/code/hand_coded_lane_follower.py	/^def region_of_interest(canny):$/;"	f
+resume_driving	refs/opencv_driver/code/objects_on_road_processor.py	/^    def resume_driving(self, car_state):$/;"	m	class:ObjectsOnRoadProcessor
+ret	refs/opencv_driver/code/save_road_image.py	/^    ret, frame = cam.read()$/;"	v
+save_image_and_steering_angle	refs/opencv_driver/code/save_training_data.py	/^def save_image_and_steering_angle(video_file):$/;"	f
+set_car_state	refs/opencv_driver/code/traffic_objects.py	/^    def set_car_state(self, car_state):$/;"	m	class:GreenTrafficLight
+set_car_state	refs/opencv_driver/code/traffic_objects.py	/^    def set_car_state(self, car_state):$/;"	m	class:Person
+set_car_state	refs/opencv_driver/code/traffic_objects.py	/^    def set_car_state(self, car_state):$/;"	m	class:RedTrafficLight
+set_car_state	refs/opencv_driver/code/traffic_objects.py	/^    def set_car_state(self, car_state):$/;"	m	class:SpeedLimit
+set_car_state	refs/opencv_driver/code/traffic_objects.py	/^    def set_car_state(self, car_state):$/;"	m	class:StopSign
+set_car_state	refs/opencv_driver/code/traffic_objects.py	/^    def set_car_state(self, car_state):$/;"	m	class:TrafficObject
+set_first_input	model_runner.py	/^    def set_first_input(self, task=None, profile=False):$/;"	m	class:ModelRunner
+set_first_input_orginal	model_runner.py	/^    def set_first_input_orginal(self, input_file):$/;"	m	class:ModelRunner
+set_general_input	model_runner.py	/^    def set_general_input(self, interpreter, profile=False):$/;"	m	class:ModelRunner
+set_input	model_runner.py	/^    def set_input(self, idx, task=None, profile=False):$/;"	m	class:ModelRunner
+set_sized_input	model_runner.py	/^    def set_sized_input(self, interpreter, size, resize):$/;"	m	class:ModelRunner
+set_speed	refs/opencv_driver/code/objects_on_road_processor.py	/^    def set_speed(self, speed):$/;"	m	class:ObjectsOnRoadProcessor
+show_image	refs/opencv_driver/code/deep_pi_car.py	/^def show_image(title, frame, show=_SHOW_IMAGE):$/;"	f
+show_image	refs/opencv_driver/code/end_to_end_lane_follower.py	/^def show_image(title, frame, show=_SHOW_IMAGE):$/;"	f
+show_image	refs/opencv_driver/code/get_mask_val.py	/^def show_image(title, frame, show=_SHOW_IMAGE):$/;"	f
+show_image	refs/opencv_driver/code/hand_coded_lane_follower.py	/^def show_image(title, frame, show=_SHOW_IMAGE):$/;"	f
+show_image	refs/opencv_driver/code/objects_on_road_processor.py	/^def show_image(title, frame, show=_SHOW_IMAGE):$/;"	f
+split	refs/dnn_models/object_detection/code/generate_tfrecord.py	/^def split(df, group):$/;"	f
+stabilize_steering_angle	refs/opencv_driver/code/hand_coded_lane_follower.py	/^def stabilize_steering_angle(curr_steering_angle, new_steering_angle, num_of_lane_lines, max_ang/;"	f
+steer	refs/opencv_driver/code/hand_coded_lane_follower.py	/^    def steer(self, frame, lane_lines):$/;"	m	class:HandCodedLaneFollower
+test_photo	refs/opencv_driver/code/end_to_end_lane_follower.py	/^def test_photo(file):$/;"	f
+test_photo	refs/opencv_driver/code/hand_coded_lane_follower.py	/^def test_photo(file):$/;"	f
+test_photo	refs/opencv_driver/code/objects_on_road_processor.py	/^def test_photo(file):$/;"	f
+test_stop_sign	refs/opencv_driver/code/objects_on_road_processor.py	/^def test_stop_sign():$/;"	f
+test_video	refs/opencv_driver/code/end_to_end_lane_follower.py	/^def test_video(video_file):$/;"	f
+test_video	refs/opencv_driver/code/hand_coded_lane_follower.py	/^def test_video(video_file):$/;"	f
+test_video	refs/opencv_driver/code/objects_on_road_processor.py	/^def test_video(video_file):$/;"	f
+tf	refs/dnn_models/object_detection/code/generate_tfrecord.py	/^import tensorflow as tf$/;"	I
+tflite	model_runner.py	/^import tflite_runtime.interpreter as tflite$/;"	I
+this step takes 10-20 min depending on your download speed.	doc/SDC Instruction.md	/^# this step takes 10-20 min depending on your download speed.$/;"	c
+update_intermediate	model_runner.py	/^    def update_intermediate(self, interpreter, profile=False):$/;"	m	class:ModelRunner
+wait_done	refs/opencv_driver/code/traffic_objects.py	/^    def wait_done(self):$/;"	m	class:StopSign
+weird TPU error	doc/SDC Instruction.md	/^# weird TPU error$/;"	c
+xml_to_csv	refs/dnn_models/object_detection/code/xml_to_csv.py	/^def xml_to_csv(path):$/;"	f
