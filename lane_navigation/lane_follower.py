@@ -14,6 +14,7 @@ class EndToEndLaneFollower(object):
     ):
         self.__SCREEN_WIDTH = 320
         self.__SCREEN_HEIGHT = 180
+        self.show=False
 
         logging.info("Creating a EndToEndLaneFollower...")
 
@@ -53,11 +54,11 @@ class EndToEndLaneFollower(object):
             _, image_lane = self.camera.read()
 
             image_lane = self.follow_lane(image_lane)
-            show_image("Lane Lines", image_lane)
-
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                self.cleanup()
-                break
+            show_image("Lane Lines", image_lane, self.show)
+            if self.show:
+                if cv2.waitKey(1) & 0xFF == ord("q"):
+                    self.cleanup()
+                    break
 
     def follow_lane(self, frame):
         self.curr_steering_angle = self.compute_steering_angle(frame)
@@ -107,8 +108,8 @@ def show_image(title, frame, show=False):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
 
     lane_follower = EndToEndLaneFollower()
     lane_follower.init_cam()
-    lane_follower.drive(20)
+    lane_follower.drive(15)
