@@ -1,3 +1,4 @@
+from pathlib import Path
 import cv2
 
 import getch
@@ -22,7 +23,12 @@ class KeypressDrive:
         self.cur_angle = 90
         self.step = 1
         self.previous_key = None
-        self.idx = 561
+        self.idx = 0
+
+        data_dir = Path("train_data_generation/data/drive_with_keypress")
+        self.lab_cnt = len(list(data_dir.glob("*")))
+        self.lab_dir = data_dir / f"{self.lab_cnt}"
+        self.lab_dir.mkdir(exist_ok=True, parents=True)
 
     def init_car(self):
         self.back_wheels.speed = 0
@@ -46,7 +52,7 @@ class KeypressDrive:
     def write_data(self):
         _, image = self.camera.read()
         cv2.imwrite(
-            f"train_data_generation/data/drive_with_keypress/frame_{self.idx:06}_{round(self.cur_angle, 2)}.png",
+             str(self.lab_dir / f"frame_{self.idx:06}_{int(self.cur_angle + 0.5)}.png"),
             image,
         )
         self.idx += 1
