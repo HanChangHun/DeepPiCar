@@ -5,11 +5,36 @@ import cv2
 import picar
 import numpy as np
 
+from pycoral.utils.edgetpu import make_interpreter
+from pycoral.adapters import classify
+from pycoral.adapters import common
+
+
+def set_input_tensor(interpreter, input):
+    input_details = interpreter.get_input_details()[0]
+    tensor_index = input_details["index"]
+    input_tensor = interpreter.tensor(tensor_index)()
+    # Inputs for the TFLite model must be uint8, so we quantize our input data.
+    scale, zero_point = input_details["quantization"]
+    quantized_input = np.uint8(input / scale + zero_point)
+    input_tensor[:, :, :] = quantized_input
+
+
+def predict_steer(interpreter, input):
+    set_input_tensor(interpreter, input)
+    interpreter.invoke()
+    output_details = interpreter.get_output_details()[0]
+    output = interpreter.get_tensor(output_details["index"])
+    # Outputs from the TFLite model are uint8, so we dequantize the results:
+    scale, zero_point = output_details["quantization"]
+    output = scale * (output - zero_point)
+    return output
+
 
 class EndToEndLaneFollower(object):
     def __init__(
         self,
-        model_path="lane_navigation/model/lane_navigation_final.tflite",
+        model_path="lane_navigation/model/lane_navigation_final_edgetpu.tflite",
     ):
         self.__SCREEN_WIDTH = 320
         self.__SCREEN_HEIGHT = 180
@@ -28,6 +53,8 @@ class EndToEndLaneFollower(object):
         self.front_wheels = picar.front_wheels.Front_Wheels()
         self.back_wheels.speed = 0
         self.curr_steering_angle = 90
+
+        self.intp = make_interpreter(model_path)
 
     def init_cam(self):
         for _ in range(50):
@@ -70,7 +97,9 @@ class EndToEndLaneFollower(object):
         """
         preprocessed = img_preprocess(frame)
         X = np.asarray([preprocessed])
-        steering_angle = self.model.predict(X)[0]
+        # common.set_input(self.intp, frame.astype(np.uint8))
+        # steering_angle = self.intp.invoke()
+        steering_angle = predict_steer(self.intp, X)[0]
 
         logging.debug("new steering angle: %s" % steering_angle)
         return int(steering_angle + 0.5)  # round the nearest integer
