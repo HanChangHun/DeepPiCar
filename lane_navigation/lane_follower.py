@@ -7,8 +7,6 @@ import numpy as np
 from keras.models import load_model
 
 
-
-
 class EndToEndLaneFollower(object):
     def __init__(
         self,
@@ -37,15 +35,13 @@ class EndToEndLaneFollower(object):
             _, image_lane = self.camera.read()
             show_image("Lane Lines", image_lane)
 
-
     def __exit__(self, _type, value, traceback):
-        """ Exit a with statement"""
+        """Exit a with statement"""
         if traceback is not None:
             # Exception occurred:
-            logging.error('Exiting with statement with exception %s' % traceback)
+            logging.error("Exiting with statement with exception %s" % traceback)
 
         self.cleanup()
-
 
     def drive(self, speed=0):
         logging.info("Starting to drive at speed %s..." % speed)
