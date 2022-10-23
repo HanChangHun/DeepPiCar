@@ -21,6 +21,7 @@ class KeypressDrive:
         self.camera.set(4, 180)
 
         self.cur_angle = 90
+        self.cur_speed = 0
         self.step = 1
         self.previous_key = None
         self.idx = 0
@@ -57,17 +58,11 @@ class KeypressDrive:
         )
         self.idx += 1
 
-    def steer(self, angle):
-        self.cur_angle += angle
-
-        if self.cur_angle < 45:
-            self.cur_angle = 45
-        elif self.cur_angle > 135:
-            self.cur_angle = 135
-
-        self.front_wheels.turn(self.cur_angle)
-        # print(f"current angle: {self.cur_angle}")
-        # self.write_data()
+    def go_front(self):
+        self.cur_speed += 20
+        self.set_speed(self.cur_speed)
+        self.cur_speed -= 20
+        self.set_speed(self.cur_speed)
 
     def steer_left(self):
         if self.previous_key == "a":
@@ -85,14 +80,29 @@ class KeypressDrive:
         self.steer(2 * self.step)
         self.previous_key = "d"
 
+    def steer(self, angle):
+        self.cur_angle += angle
+
+        if self.cur_angle < 45:
+            self.cur_angle = 45
+        elif self.cur_angle > 135:
+            self.cur_angle = 135
+
+        self.front_wheels.turn(self.cur_angle)
+        # print(f"current angle: {self.cur_angle}")
+        # self.write_data()
+
     def start(self):
         self.init_car()
         self.init_cam()
-        self.set_speed(0)
+        self.set_speed(self.cur_speed)
         print("start keypress drving")
 
         while True:
             key = getch.getch()
+            if key == "w":
+                self.go_front()
+
             if key == "a":
                 self.steer_left()
 
