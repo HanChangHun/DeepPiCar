@@ -1,3 +1,5 @@
+import time
+
 from pathlib import Path
 import cv2
 
@@ -61,6 +63,7 @@ class KeypressDrive:
     def go_front(self):
         self.cur_speed += 20
         self.set_speed(self.cur_speed)
+        time.sleep(0.5)
         self.cur_speed -= 20
         self.set_speed(self.cur_speed)
 
