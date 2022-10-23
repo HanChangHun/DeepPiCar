@@ -67,7 +67,7 @@ class KeypressDrive:
 
         self.front_wheels.turn(self.cur_angle)
         # print(f"current angle: {self.cur_angle}")
-        self.write_data()
+        # self.write_data()
 
     def steer_left(self):
         if self.previous_key == "a":
