@@ -52,7 +52,7 @@ class KeypressDrive:
     def write_data(self):
         _, image = self.camera.read()
         cv2.imwrite(
-             str(self.lab_dir / f"frame_{self.idx:06}_{int(self.cur_angle + 0.5)}.png"),
+            str(self.lab_dir / f"frame_{self.idx:06}_{int(self.cur_angle + 0.5)}.png"),
             image,
         )
         self.idx += 1
@@ -88,7 +88,7 @@ class KeypressDrive:
     def start(self):
         self.init_car()
         self.init_cam()
-        self.set_speed(25)
+        self.set_speed(0)
         print("start keypress drving")
 
         while True:
@@ -98,6 +98,15 @@ class KeypressDrive:
 
             if key == "d":
                 self.steer_right()
+
+            if key == "e":
+                target_angle = int(input("input_angle: "))
+                self.cur_angle = target_angle
+                self.front_wheels.turn(self.cur_angle)
+
+            if key == "r":
+                self.write_data()
+
             if key == "x":
                 break
 
