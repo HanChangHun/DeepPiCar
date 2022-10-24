@@ -73,8 +73,8 @@ if __name__ == "__main__":
     image_paths = []
     lab_dir = Path("train_data_generation/data/drive_with_keypress/")
     data_dirs = []
-    data_dirs.append(lab_dir / "28")
-    data_dirs.append(lab_dir / "29")
+    # data_dirs.append(lab_dir / "28")
+    # data_dirs.append(lab_dir / "29")
     data_dirs.append(lab_dir / "30")
     data_dirs.append(lab_dir / "31")
     for data_dir in data_dirs:
@@ -110,13 +110,13 @@ if __name__ == "__main__":
     )
 
     history = model.fit(
-        image_data_generator(X_train, y_train, batch_size=128, is_training=True),
-        steps_per_epoch=300,
-        epochs=20,
+        image_data_generator(X_train, y_train, batch_size=256, is_training=True),
+        steps_per_epoch=150,
+        epochs=10,
         validation_data=image_data_generator(
-            X_valid, y_valid, batch_size=128, is_training=False
+            X_valid, y_valid, batch_size=256, is_training=False
         ),
-        validation_steps=200,
+        validation_steps=100,
         verbose=1,
         shuffle=1,
         callbacks=[checkpoint_callback],
