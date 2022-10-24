@@ -61,10 +61,10 @@ class KeypressDrive:
         self.idx += 1
 
     def go_front(self):
-        self.cur_speed += 20
+        self.cur_speed += 30
         self.set_speed(self.cur_speed)
         time.sleep(0.5)
-        self.cur_speed -= 20
+        self.cur_speed -= 30
         self.set_speed(self.cur_speed)
 
     def steer_left(self):
@@ -112,12 +112,7 @@ class KeypressDrive:
             if key == "d":
                 self.steer_right()
 
-            if key == "e":
-                target_angle = int(input("input_angle: "))
-                self.cur_angle = target_angle
-                self.front_wheels.turn(self.cur_angle)
-
-            if key == "r":
+            if key == "c":
                 self.write_data()
 
             if key == "x":
