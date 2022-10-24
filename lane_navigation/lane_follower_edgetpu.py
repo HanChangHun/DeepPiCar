@@ -34,7 +34,7 @@ def predict_steer(interpreter, input):
 class EndToEndLaneFollower(object):
     def __init__(
         self,
-        model_path="lane_navigation/model/lane_navigation_w_pretrain_final_edgetpu.tflite",
+        model_path="lane_navigation/model/lane_navigation_final_edgetpu.tflite",
     ):
         self.__SCREEN_WIDTH = 320
         self.__SCREEN_HEIGHT = 180
@@ -139,4 +139,4 @@ if __name__ == "__main__":
 
     lane_follower = EndToEndLaneFollower()
     lane_follower.init_cam()
-    lane_follower.drive(40)
+    lane_follower.drive(25)
