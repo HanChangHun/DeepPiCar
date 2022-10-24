@@ -6,11 +6,9 @@ import datetime
 import cv2
 import picar
 import numpy as np
-from keras.models import load_model
 
 from pycoral.utils.edgetpu import make_interpreter
-from pycoral.adapters import classify
-from pycoral.adapters import common
+
 
 def set_input_tensor(interpreter, input):
     input_details = interpreter.get_input_details()[0]
@@ -31,6 +29,7 @@ def predict_steer(interpreter, input):
     scale, zero_point = output_details["quantization"]
     output = scale * (output - zero_point)
     return output
+
 
 class EndToEndLaneFollower(object):
     def __init__(
@@ -61,8 +60,7 @@ class EndToEndLaneFollower(object):
 
     def init_cam(self):
         for _ in range(50):
-            _, image_lane = self.camera.read()
-            show_image("Lane Lines", image_lane)
+            self.camera.read()
 
     def __exit__(self, _type, value, traceback):
         """Exit a with statement"""
