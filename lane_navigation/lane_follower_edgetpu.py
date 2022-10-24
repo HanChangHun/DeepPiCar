@@ -58,6 +58,8 @@ class EndToEndLaneFollower(object):
         self.intp.allocate_tensors()
         self.intp.invoke()
 
+        self.dur = []
+
     def init_cam(self):
         for _ in range(50):
             self.camera.read()
@@ -77,7 +79,12 @@ class EndToEndLaneFollower(object):
         while self.camera.isOpened():
             _, image_lane = self.camera.read()
 
+            st = time.perf_counter()
             image_lane = self.follow_lane(image_lane)
+            dur = (time.perf_counter() - st) * 1000
+            fps = 1000 / dur
+            self.dur.append(dur)
+            logging.debug(f"fps: {fps}, duration: {dur}")
             # show_image("Lane Lines", image_lane, self.show)
             # if self.show:
             # if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -143,7 +150,10 @@ if __name__ == "__main__":
     lane_follower = EndToEndLaneFollower()
     lane_follower.init_cam()
     try:
-        lane_follower.drive(80)
+        lane_follower.drive(0)
     except KeyboardInterrupt:
         lane_follower.cleanup()
+        print(f"mean: {np.mean(lane_follower.dur[1:])}")
+        print(f"std: {np.std(lane_follower.dur[1:])}")
+        print(f"fps: {1000 / np.mean(lane_follower.dur[1:])}")
         sys.exit(0)
