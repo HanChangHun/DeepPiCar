@@ -78,7 +78,7 @@ if __name__ == "__main__":
     data_dirs.append(lab_dir / "30")
     data_dirs.append(lab_dir / "31")
     for data_dir in data_dirs:
-        image_paths = list(data_dir.glob("*.png"))
+        image_paths += list(data_dir.glob("*.png"))
     image_paths.sort()
 
     steering_angles = []
@@ -98,7 +98,9 @@ if __name__ == "__main__":
     )
 
     # model = nvidia_model.nvidia_model()
-    model = keras.models.load_model("lane_navigation/model/lane_navigation_final.h5")
+    model = keras.models.load_model(
+        "lane_navigation/model/lane_navigation_w_pretrain_check.h5"
+    )
 
     model_output_dir = Path("lane_navigation/model/")
     checkpoint_callback = keras.callbacks.ModelCheckpoint(
@@ -109,12 +111,12 @@ if __name__ == "__main__":
 
     history = model.fit(
         image_data_generator(X_train, y_train, batch_size=128, is_training=True),
-        steps_per_epoch=len(X_train) // 128,
-        epochs=5,
+        steps_per_epoch=300,
+        epochs=20,
         validation_data=image_data_generator(
             X_valid, y_valid, batch_size=128, is_training=False
         ),
-        validation_steps=len(X_valid) // 128,
+        validation_steps=200,
         verbose=1,
         shuffle=1,
         callbacks=[checkpoint_callback],

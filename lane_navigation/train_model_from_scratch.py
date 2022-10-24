@@ -77,7 +77,7 @@ if __name__ == "__main__":
     data_dirs.append(lab_dir / "30")
     data_dirs.append(lab_dir / "31")
     for data_dir in data_dirs:
-        image_paths = list(data_dir.glob("*.png"))
+        image_paths += list(data_dir.glob("*.png"))
     image_paths.sort()
 
     steering_angles = []
