@@ -1,6 +1,7 @@
 import sys
 import time
 import logging
+import datetime
 
 import cv2
 import picar
@@ -50,20 +51,18 @@ class EndToEndLaneFollower(object):
         self.back_wheels.speed = speed
         i = 0
         while self.camera.isOpened():
-            time.sleep(1e-4)
-
             _, image_lane = self.camera.read()
 
             image_lane = self.follow_lane(image_lane)
-            show_image("Lane Lines", image_lane, self.show)
-            if self.show:
-                if cv2.waitKey(1) & 0xFF == ord("q"):
-                    self.cleanup()
-                    break
+            # show_image("Lane Lines", image_lane, self.show)
+            # if self.show:
+                # if cv2.waitKey(1) & 0xFF == ord("q"):
+                    # self.cleanup()
+                    # break
 
     def follow_lane(self, frame):
         self.curr_steering_angle = self.compute_steering_angle(frame)
-        logging.debug("curr_steering_angle = %d" % self.curr_steering_angle)
+        # logging.debug("curr_steering_angle = %d" % self.curr_steering_angle)
 
         self.front_wheels.turn(self.curr_steering_angle)
 
@@ -74,9 +73,15 @@ class EndToEndLaneFollower(object):
         preprocessed = img_preprocess(frame)
         X = np.asarray([preprocessed])
         steering_angle = self.model.predict(X)[0]
+        new_steering_angle = int(steering_angle + 0.5)
 
-        logging.debug("new steering angle: %s" % steering_angle)
-        return int(steering_angle + 0.5)  # round the nearest integer
+        now = datetime.datetime.now()
+        format = "%H:%M:%S.%f"
+        cur_time = datetime.datetime.strftime(now, format)
+
+        logging.debug(f"[{cur_time[:-3]}]new steering angle: {new_steering_angle}")
+
+        return new_steering_angle  # round the nearest integer
 
     def cleanup(self):
         """Reset the hardware"""
@@ -114,7 +119,7 @@ if __name__ == "__main__":
     lane_follower = EndToEndLaneFollower()
     lane_follower.init_cam()
     try:
-        lane_follower.drive(21)
+        lane_follower.drive(30)
     except KeyboardInterrupt:
         lane_follower.cleanup()
         sys.exit(0)
