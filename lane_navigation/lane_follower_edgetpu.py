@@ -139,4 +139,4 @@ if __name__ == "__main__":
 
     lane_follower = EndToEndLaneFollower()
     lane_follower.init_cam()
-    lane_follower.drive(25)
+    lane_follower.drive(40)
