@@ -1,34 +1,12 @@
+import sys
 import time
 import logging
+import datetime
 
 import cv2
 import picar
 import numpy as np
-
-from pycoral.utils.edgetpu import make_interpreter
-from pycoral.adapters import classify
-from pycoral.adapters import common
-
-
-def set_input_tensor(interpreter, input):
-    input_details = interpreter.get_input_details()[0]
-    tensor_index = input_details["index"]
-    input_tensor = interpreter.tensor(tensor_index)()
-    # Inputs for the TFLite model must be uint8, so we quantize our input data.
-    scale, zero_point = input_details["quantization"]
-    quantized_input = np.uint8(input / scale + zero_point)
-    input_tensor[:, :, :] = quantized_input
-
-
-def predict_steer(interpreter, input):
-    set_input_tensor(interpreter, input)
-    interpreter.invoke()
-    output_details = interpreter.get_output_details()[0]
-    output = interpreter.get_tensor(output_details["index"])
-    # Outputs from the TFLite model are uint8, so we dequantize the results:
-    scale, zero_point = output_details["quantization"]
-    output = scale * (output - zero_point)
-    return output
+from keras.models import load_model
 
 
 class EndToEndLaneFollower(object):
@@ -53,10 +31,7 @@ class EndToEndLaneFollower(object):
         self.front_wheels = picar.front_wheels.Front_Wheels()
         self.back_wheels.speed = 0
         self.curr_steering_angle = 90
-
-        self.intp = make_interpreter(model_path)
-        self.intp.allocate_tensors()
-        self.intp.invoke()
+        self.model = load_model(model_path)
 
     def init_cam(self):
         for _ in range(50):
@@ -76,20 +51,18 @@ class EndToEndLaneFollower(object):
         self.back_wheels.speed = speed
         i = 0
         while self.camera.isOpened():
-            time.sleep(1e-4)
-
             _, image_lane = self.camera.read()
 
             image_lane = self.follow_lane(image_lane)
-            show_image("Lane Lines", image_lane, self.show)
-            if self.show:
-                if cv2.waitKey(1) & 0xFF == ord("q"):
-                    self.cleanup()
-                    break
+            # show_image("Lane Lines", image_lane, self.show)
+            # if self.show:
+            # if cv2.waitKey(1) & 0xFF == ord("q"):
+            # self.cleanup()
+            # break
 
     def follow_lane(self, frame):
         self.curr_steering_angle = self.compute_steering_angle(frame)
-        logging.debug("curr_steering_angle = %d" % self.curr_steering_angle)
+        # logging.debug("curr_steering_angle = %d" % self.curr_steering_angle)
 
         self.front_wheels.turn(self.curr_steering_angle)
 
@@ -99,12 +72,16 @@ class EndToEndLaneFollower(object):
         """
         preprocessed = img_preprocess(frame)
         X = np.asarray([preprocessed])
-        # common.set_input(self.intp, frame.astype(np.uint8))
-        # steering_angle = self.intp.invoke()
-        steering_angle = predict_steer(self.intp, X)[0]
+        steering_angle = self.model.predict(X)[0]
+        new_steering_angle = int(steering_angle + 0.5)
 
-        logging.debug("new steering angle: %s" % steering_angle)
-        return int(steering_angle + 0.5)  # round the nearest integer
+        now = datetime.datetime.now()
+        format = "%H:%M:%S.%f"
+        cur_time = datetime.datetime.strftime(now, format)
+
+        logging.debug(f"[{cur_time[:-3]}]new steering angle: {new_steering_angle}")
+
+        return new_steering_angle  # round the nearest integer
 
     def cleanup(self):
         """Reset the hardware"""
@@ -121,11 +98,13 @@ def img_preprocess(image):
         int(height / 2) :, :, :
     ]  # remove top half of the image, as it is not relevant for lane following
     image = cv2.cvtColor(
-        image, cv2.COLOR_RGB2YUV
+        image, cv2.COLOR_BGR2YUV
     )  # Nvidia model said it is best to use YUV color space
-    image = cv2.GaussianBlur(image, (3, 3), 0)
+    # image = cv2.GaussianBlur(image, (3, 3), 0)
     image = cv2.resize(image, (200, 66))  # input image size (200,66) Nvidia model
-    image = image.astype(np.uint8)
+    image = (
+        image / 255
+    )  # normalizing, the processed image becomes black for some reason.  do we need this?
     return image
 
 
@@ -139,4 +118,8 @@ if __name__ == "__main__":
 
     lane_follower = EndToEndLaneFollower()
     lane_follower.init_cam()
-    lane_follower.drive(25)
+    try:
+        lane_follower.drive(30)
+    except KeyboardInterrupt:
+        lane_follower.cleanup()
+        sys.exit(0)
