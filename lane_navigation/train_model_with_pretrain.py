@@ -54,7 +54,7 @@ def image_data_generator(image_paths, steering_angles, batch_size, is_training):
         for i in range(batch_size):
             random_index = random.randint(0, len(image_paths) - 1)
             image_path = image_paths[random_index]
-            image = my_imread(image_paths[random_index])
+            image = my_imread(image_path)
             steering_angle = steering_angles[random_index]
             if is_training:
                 # training: augment image
@@ -75,6 +75,8 @@ if __name__ == "__main__":
     data_dirs = []
     data_dirs.append(lab_dir / "28")
     data_dirs.append(lab_dir / "29")
+    data_dirs.append(lab_dir / "30")
+    data_dirs.append(lab_dir / "31")
     for data_dir in data_dirs:
         image_paths = list(data_dir.glob("*.png"))
     image_paths.sort()
@@ -106,13 +108,13 @@ if __name__ == "__main__":
     )
 
     history = model.fit(
-        image_data_generator(X_train, y_train, batch_size=100, is_training=True),
-        steps_per_epoch=300,
-        epochs=12,
+        image_data_generator(X_train, y_train, batch_size=128, is_training=True),
+        steps_per_epoch=len(X_train) // 128,
+        epochs=5,
         validation_data=image_data_generator(
-            X_valid, y_valid, batch_size=100, is_training=False
+            X_valid, y_valid, batch_size=128, is_training=False
         ),
-        validation_steps=200,
+        validation_steps=len(X_valid) // 128,
         verbose=1,
         shuffle=1,
         callbacks=[checkpoint_callback],

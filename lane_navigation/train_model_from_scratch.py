@@ -55,7 +55,7 @@ def image_data_generator(image_paths, steering_angles, batch_size, is_training):
         for i in range(batch_size):
             random_index = random.randint(0, len(image_paths) - 1)
             image_path = image_paths[random_index]
-            image = my_imread(image_paths[random_index])
+            image = my_imread(image_path)
             steering_angle = steering_angles[random_index]
             if is_training:
                 # training: augment image
