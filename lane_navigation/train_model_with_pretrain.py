@@ -15,9 +15,13 @@ from sklearn.model_selection import train_test_split
 
 import lane_navigation.image_augmentation as image_augmentation
 
+os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
 
-print(device_lib.list_local_devices())
-sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(log_device_placement=True))
+gpu = tf.config.experimental.list_physical_devices("GPU")
+try:
+    tf.config.experimental.set_memory_growth(gpu[0], True)
+except RuntimeError as e:
+    print(e)
 
 
 def my_imread(image_path):
