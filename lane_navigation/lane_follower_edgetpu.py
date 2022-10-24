@@ -143,7 +143,7 @@ if __name__ == "__main__":
     lane_follower = EndToEndLaneFollower()
     lane_follower.init_cam()
     try:
-        lane_follower.drive(30)
+        lane_follower.drive(80)
     except KeyboardInterrupt:
         lane_follower.cleanup()
         sys.exit(0)
