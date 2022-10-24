@@ -1,3 +1,4 @@
+import sys
 import time
 import logging
 
@@ -10,7 +11,7 @@ from keras.models import load_model
 class EndToEndLaneFollower(object):
     def __init__(
         self,
-        model_path="lane_navigation/model/lane_navigation_final.h5",
+        model_path="lane_navigation/model/lane_navigation_w_pretrain_final.h5",
     ):
         self.__SCREEN_WIDTH = 320
         self.__SCREEN_HEIGHT = 180
@@ -94,7 +95,7 @@ def img_preprocess(image):
     image = cv2.cvtColor(
         image, cv2.COLOR_BGR2YUV
     )  # Nvidia model said it is best to use YUV color space
-    image = cv2.GaussianBlur(image, (3, 3), 0)
+    # image = cv2.GaussianBlur(image, (3, 3), 0)
     image = cv2.resize(image, (200, 66))  # input image size (200,66) Nvidia model
     image = (
         image / 255
@@ -112,4 +113,9 @@ if __name__ == "__main__":
 
     lane_follower = EndToEndLaneFollower()
     lane_follower.init_cam()
-    lane_follower.drive(15)
+    try:
+        lane_follower.drive(21)
+    except KeyboardInterrupt:
+        lane_follower.cleanup()
+        sys.exit(0)
+
