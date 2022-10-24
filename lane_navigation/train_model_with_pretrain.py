@@ -9,7 +9,6 @@ import numpy as np
 
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.python.client import device_lib
 
 from sklearn.model_selection import train_test_split
 
@@ -40,8 +39,10 @@ def img_preprocess(image):
     )  # Nvidia model said it is best to use YUV color space
     image = cv2.GaussianBlur(image, (3, 3), 0)
     image = cv2.resize(image, (200, 66))  # input image size (200,66) Nvidia model
-    # image = image / 255 # normalizing, the processed image becomes black for some reason.  do we need this?
-    image = image.astype(np.uint8)
+    image = (
+        image / 255
+    )  # normalizing, the processed image becomes black for some reason.  do we need this?
+    # image = image.astype(np.uint8)
     return image
 
 
@@ -83,7 +84,7 @@ if __name__ == "__main__":
         steering_angles.append(int(float(image_path.stem[13:]) + 0.5))
 
     X_train, X_valid, y_train, y_valid = train_test_split(
-        image_paths, steering_angles, test_size=0.1
+        image_paths, steering_angles, test_size=0.2
     )
 
     batch_size = 4
@@ -104,10 +105,10 @@ if __name__ == "__main__":
         save_best_only=True,
     )
 
-    history = model.fit_generator(
+    history = model.fit(
         image_data_generator(X_train, y_train, batch_size=100, is_training=True),
         steps_per_epoch=300,
-        epochs=10,
+        epochs=12,
         validation_data=image_data_generator(
             X_valid, y_valid, batch_size=100, is_training=False
         ),

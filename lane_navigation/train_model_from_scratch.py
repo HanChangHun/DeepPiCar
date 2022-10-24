@@ -4,16 +4,24 @@ import random
 import datetime
 from pathlib import Path
 
+import cv2
 import numpy as np
 
 import keras
+import tensorflow as tf
 
 from sklearn.model_selection import train_test_split
 
-import cv2
-
 import lane_navigation.nvidia_model as nvidia_model
 import lane_navigation.image_augmentation as image_augmentation
+
+os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
+
+gpu = tf.config.experimental.list_physical_devices("GPU")
+try:
+    tf.config.experimental.set_memory_growth(gpu[0], True)
+except RuntimeError as e:
+    print(e)
 
 
 def my_imread(image_path):
@@ -32,8 +40,10 @@ def img_preprocess(image):
     )  # Nvidia model said it is best to use YUV color space
     image = cv2.GaussianBlur(image, (3, 3), 0)
     image = cv2.resize(image, (200, 66))  # input image size (200,66) Nvidia model
-    # image = image / 255 # normalizing, the processed image becomes black for some reason.  do we need this?
-    image = image.astype(np.uint8)
+    image = (
+        image / 255
+    )  # normalizing, the processed image becomes black for some reason.  do we need this?
+    # image = image.astype(np.uint8)
     return image
 
 
@@ -62,11 +72,12 @@ def image_data_generator(image_paths, steering_angles, batch_size, is_training):
 
 if __name__ == "__main__":
     image_paths = []
-    lab_dirs = list(Path("train_data_generation/data/drive_with_keypress/").glob("*"))
-    for lab_dir in lab_dirs:
-        frame_paths = list(lab_dir.glob("*.png"))
-        for frame_path in frame_paths:
-            image_paths.append(frame_path)
+    lab_dir = Path("train_data_generation/data/drive_with_keypress/")
+    data_dirs = []
+    data_dirs.append(lab_dir / "30")
+    data_dirs.append(lab_dir / "31")
+    for data_dir in data_dirs:
+        image_paths = list(data_dir.glob("*.png"))
     image_paths.sort()
 
     steering_angles = []
@@ -74,7 +85,7 @@ if __name__ == "__main__":
         steering_angles.append(int(float(image_path.stem[13:]) + 0.5))
 
     X_train, X_valid, y_train, y_valid = train_test_split(
-        image_paths, steering_angles, test_size=0.1
+        image_paths, steering_angles, test_size=0.2
     )
 
     batch_size = 4
@@ -94,10 +105,10 @@ if __name__ == "__main__":
         save_best_only=True,
     )
 
-    history = model.fit_generator(
+    history = model.fit(
         image_data_generator(X_train, y_train, batch_size=100, is_training=True),
-        steps_per_epoch=500,
-        epochs=30,
+        steps_per_epoch=300,
+        epochs=12,
         validation_data=image_data_generator(
             X_valid, y_valid, batch_size=100, is_training=False
         ),

@@ -11,27 +11,27 @@ def nvidia_model():
 
     # Convolution Layers
     model.add(
-        Conv2D(24, (5, 5), strides=(2, 2), input_shape=(66, 200, 3), activation="elu")
+        Conv2D(24, (5, 5), strides=(2, 2), input_shape=(66, 200, 3), activation="relu")
     )
-    model.add(Conv2D(36, (5, 5), strides=(2, 2), activation="elu"))
-    model.add(Conv2D(48, (5, 5), strides=(2, 2), activation="elu"))
-    model.add(Conv2D(64, (3, 3), activation="elu"))
+    model.add(Conv2D(36, (5, 5), strides=(2, 2), activation="relu"))
+    model.add(Conv2D(48, (5, 5), strides=(2, 2), activation="relu"))
+    model.add(Conv2D(64, (3, 3), activation="relu"))
     model.add(Dropout(0.2))  # not in original model. added for more robustness
-    model.add(Conv2D(64, (3, 3), activation="elu"))
+    model.add(Conv2D(64, (3, 3), activation="relu"))
 
     # Fully Connected Layers
     model.add(Flatten())
     model.add(Dropout(0.2))  # not in original model. added for more robustness
-    model.add(Dense(100, activation="elu"))
-    model.add(Dense(50, activation="elu"))
-    model.add(Dense(10, activation="elu"))
+    model.add(Dense(100, activation="relu"))
+    model.add(Dense(50, activation="relu"))
+    model.add(Dense(10, activation="relu"))
 
     # output layer: turn angle (from 45-135, 90 is straight, <90 turn left, >90 turn right)
     model.add(Dense(1))
 
     # since this is a regression problem not classification problem,
     # we use MSE (Mean Squared Error) as loss function
-    optimizer = Adam(lr=1e-3)  # lr is learning rate
+    optimizer = Adam(learning_rate=1e-3)  # lr is learning rate
     model.compile(loss="mse", optimizer=optimizer)
 
     return model
