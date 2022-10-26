@@ -5,8 +5,12 @@ import numpy as np
 
 from pycoral.utils.edgetpu import make_interpreter
 
-from deep_pi_car.utils import show_image
-from lane_navigation.utils import display_heading_line, img_preprocess, predict_steer
+from lane_navigation.utils import (
+    display_heading_line,
+    img_preprocess,
+    predict_steer,
+    show_image,
+)
 
 
 _SHOW_IMAGE = False
