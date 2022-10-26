@@ -35,8 +35,9 @@ class LaneFollowerEdgeTPU(object):
 
         start_time = time.perf_counter()
         self.curr_steering_angle = self.compute_steering_angle(frame)
-        duration = time.perf_counter() - start_time
+        duration = (time.perf_counter() - start_time) * 1000
         self.durations.append(duration)
+
         logging.debug(f"curr_steering_angle = {self.curr_steering_angle}")
 
         if self.car is not None:
