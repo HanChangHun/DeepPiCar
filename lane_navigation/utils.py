@@ -68,3 +68,8 @@ def display_heading_line(
     heading_image = cv2.addWeighted(frame, 0.8, heading_image, 1, 1)
 
     return heading_image
+
+
+def show_image(title, frame, show=True):
+    if show:
+        cv2.imshow(title, frame)

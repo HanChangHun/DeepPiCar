@@ -5,8 +5,7 @@ import numpy as np
 
 from keras.models import load_model
 
-from deep_pi_car.utils import show_image
-from lane_navigation.utils import display_heading_line, img_preprocess
+from lane_navigation.utils import display_heading_line, img_preprocess, show_image
 
 
 _SHOW_IMAGE = False
