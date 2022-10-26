@@ -9,7 +9,7 @@ import numpy as np
 import cv2
 
 from lane_navigation.lane_follower_edgetpu import LaneFollowerEdgeTPU
-from deep_pi_car.utils import show_image
+from drive.utils import show_image
 
 
 # from objects_on_road_processor import ObjectsOnRoadProcessor
