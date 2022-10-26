@@ -52,13 +52,13 @@ class DeepPiCar(object):
 
         self.fourcc = cv2.VideoWriter_fourcc(*"XVID")
         self.video_orig = self.create_video_recorder(
-            self.video_save_dir / "car_video.avi"
+            str(self.video_save_dir / "car_video.avi")
         )
         self.video_lane = self.create_video_recorder(
-            self.video_save_dir / "car_video_lane.avi"
+            str(self.video_save_dir / "car_video_lane.avi")
         )
         self.video_objs = self.create_video_recorder(
-            self.video_save_dir / "car_video_objs.avi"
+            str(self.video_save_dir / "car_video_objs.avi")
         )
 
         logging.info("Created a DeepPiCar")
@@ -145,7 +145,7 @@ def main():
 if __name__ == "__main__":
     logging.basicConfig(
         level=logging.DEBUG,
-        format="%(levelname)-5s:%(asctime)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S.%f",
+        format="%(levelname)-5s:%(asctime)s.%(msecs)03d: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
     main()
