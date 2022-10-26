@@ -106,13 +106,13 @@ if __name__ == "__main__":
     )
 
     history = model.fit(
-        image_data_generator(X_train, y_train, batch_size=100, is_training=True),
-        steps_per_epoch=300,
+        image_data_generator(X_train, y_train, batch_size=256, is_training=True),
+        steps_per_epoch=150,
         epochs=12,
         validation_data=image_data_generator(
-            X_valid, y_valid, batch_size=100, is_training=False
+            X_valid, y_valid, batch_size=256, is_training=False
         ),
-        validation_steps=200,
+        validation_steps=100,
         verbose=1,
         shuffle=1,
         callbacks=[checkpoint_callback],
