@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 import picar
 import cv2
 import datetime
@@ -40,16 +41,19 @@ class DeepPiCar(object):
         self.lane_follower = LaneFollowerEdgeTPU(self)
         # self.traffic_sign_processor = ObjectsOnRoadProcessor(self)
 
-        self.fourcc = cv2.VideoWriter_fourcc(*"XVID")
         date_str = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
+        self.video_save_dir = Path(f"deep_pi_car/data/{date_str}")
+        self.video_save_dir.mkdir(exist_ok=True, parents=True)
+
+        self.fourcc = cv2.VideoWriter_fourcc(*"XVID")
         self.video_orig = self.create_video_recorder(
-            f"deep_pi_car/data/{date_str}/car_video.avi"
+            self.video_save_dir / "car_video.avi"
         )
         self.video_lane = self.create_video_recorder(
-            f"deep_pi_car/data/{date_str}/car_video_lane.avi"
+            self.video_save_dir / "car_video_lane.avi"
         )
         self.video_objs = self.create_video_recorder(
-            f"deep_pi_car/data/{date_str}/car_video_objs.avi"
+            self.video_save_dir / "car_video_objs.avi"
         )
 
         logging.info("Created a DeepPiCar")
