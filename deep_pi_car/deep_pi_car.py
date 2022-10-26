@@ -8,7 +8,7 @@ import picar
 import numpy as np
 import cv2
 
-from lane_navigation.lane_follower import LaneFollowerEdgeTPU
+from lane_navigation.lane_follower_edgetpu import LaneFollowerEdgeTPU
 from deep_pi_car import show_image
 
 
