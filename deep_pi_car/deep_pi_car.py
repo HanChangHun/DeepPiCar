@@ -1,11 +1,16 @@
+import sys
 import logging
-from pathlib import Path
-import picar
-import cv2
 import datetime
-from lane_navigation.lane_follower import LaneFollowerEdgeTPU
+from pathlib import Path
 
+import picar
+
+import numpy as np
+import cv2
+
+from lane_navigation.lane_follower import LaneFollowerEdgeTPU
 from deep_pi_car import show_image
+
 
 # from objects_on_road_processor import ObjectsOnRoadProcessor
 
@@ -121,7 +126,20 @@ class DeepPiCar(object):
 
 def main():
     with DeepPiCar() as car:
-        car.drive(30)
+        try:
+            car.drive(30)
+        except KeyboardInterrupt:
+            car.cleanup()
+            print(
+                f"lane navifation inference time mean: {np.mean(car.lane_follower.dur[1:])}"
+            )
+            print(
+                f"lane navifation inference time std: {np.std(car.lane_follower.dur[1:])}"
+            )
+            print(
+                f"lane navifation inference time fps: {1000 / np.mean(car.lane_follower.dur[1:])}"
+            )
+            sys.exit(0)
 
 
 if __name__ == "__main__":
@@ -130,5 +148,4 @@ if __name__ == "__main__":
         format="%(levelname)-5s:%(asctime)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S.%f",
     )
-
     main()

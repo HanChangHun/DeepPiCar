@@ -1,9 +1,10 @@
 import logging
+import time
 
 import numpy as np
 
-from keras.models import load_model
 from pycoral.utils.edgetpu import make_interpreter
+from keras.models import load_model
 
 from deep_pi_car.utils import show_image
 from lane_navigation.utils import display_heading_line, img_preprocess, predict_steer
@@ -20,11 +21,15 @@ class LaneFollower(object):
     ):
         self.car = car
         self.model = load_model(model_path)
+        self.durations = []
 
     def follow_lane(self, frame):
         show_image("orig", frame, _SHOW_IMAGE)
 
+        start_time = time.perf_counter()
         self.curr_steering_angle = self.compute_steering_angle(frame)
+        duration = time.perf_counter() - start_time
+        self.durations.append(duration)
         logging.debug(f"curr_steering_angle = {self.curr_steering_angle}")
 
         if self.car is not None:
@@ -53,10 +58,15 @@ class LaneFollowerEdgeTPU(object):
         self.model.allocate_tensors()
         self.model.invoke()
 
+        self.durations = []
+
     def follow_lane(self, frame):
         show_image("orig", frame, _SHOW_IMAGE)
 
+        start_time = time.perf_counter()
         self.curr_steering_angle = self.compute_steering_angle(frame)
+        duration = time.perf_counter() - start_time
+        self.durations.append(duration)
         logging.debug(f"curr_steering_angle = {self.curr_steering_angle}")
 
         if self.car is not None:
