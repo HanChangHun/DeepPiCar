@@ -5,11 +5,10 @@ from pathlib import Path
 
 import picar
 
-import numpy as np
 import cv2
 
 from lane_navigation.lane_follower_edgetpu import LaneFollowerEdgeTPU
-from drive.utils import show_image
+from drive.utils import print_statistics, show_image
 
 
 # from objects_on_road_processor import ObjectsOnRoadProcessor
@@ -130,16 +129,10 @@ def main():
             car.drive(30)
         except KeyboardInterrupt:
             car.cleanup()
-            print(
-                f"lane navifation inference time mean: {np.mean(car.lane_follower.dur[1:])}"
-            )
-            print(
-                f"lane navifation inference time std: {np.std(car.lane_follower.dur[1:])}"
-            )
-            print(
-                f"lane navifation inference time fps: {1000 / np.mean(car.lane_follower.dur[1:])}"
-            )
+            print_statistics(car)
             sys.exit(0)
+
+        print_statistics(car)
 
 
 if __name__ == "__main__":
