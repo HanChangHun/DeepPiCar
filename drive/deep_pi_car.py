@@ -7,6 +7,7 @@ from pathlib import Path
 import picar
 
 import cv2
+import apriltag
 
 from lane_navigation.lane_follower_edgetpu import LaneFollowerEdgeTPU
 from drive.utils import print_statistics, show_image
@@ -75,6 +76,12 @@ class DeepPiCar(object):
         self.video_objs = self.create_video_recorder(
             str(self.video_save_dir / "car_video_objs.avi")
         )
+        self.video_tag = self.create_video_recorder(
+            str(self.video_save_dir / "car_video_tag.avi")
+        )
+
+        self.tag_options = apriltag.DetectorOptions(families="tag36h11")
+        self.tag_detector = apriltag.Detector(self.tag_options)
 
         logging.info("Created a DeepPiCar")
 
@@ -112,18 +119,24 @@ class DeepPiCar(object):
         logging.info("Starting to drive at speed %s..." % speed)
         self.back_wheels.speed = speed
         while self.camera.isOpened():
-            _, image_lane = self.camera.read()
-            show_image("orig", image_lane, self.show_image)
-            image_objs = image_lane.copy()
-            self.video_orig.write(image_lane)
+            _, image_org = self.camera.read()
+            show_image("orig", image_org, self.show_image)
+            self.video_orig.write(image_org)
 
-            # image_objs = self.process_objects_on_road(image_objs)
-            # self.video_objs.write(image_objs)
-            # show_image("Detected Objects", image_objs, self.show_image)
+            image_objs = image_org.copy()
+            image_objs = self.process_objects_on_road(image_objs)
+            self.video_objs.write(image_objs)
+            show_image("Detected Objects", image_objs, self.show_image)
 
+            image_lane = image_org.copy()
             image_lane = self.follow_lane(image_lane)
             self.video_lane.write(image_lane)
             show_image("Lane Lines", image_lane, self.show_image)
+
+            image_tag = image_org.copy()
+            image_tag = self.process_tag(image_tag)
+            self.video_tag.write(image_tag)
+            show_image("April Tag", image_tag, self.show_image)
 
             if show_image:
                 if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -137,6 +150,45 @@ class DeepPiCar(object):
     def follow_lane(self, image):
         image = self.lane_follower.follow_lane(image)
         return image
+
+    def process_tag(self, image):
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        results = self.tag_detector.detect(gray)
+        if len(results) >= 0:
+            for r in results:
+                ptA, ptB, ptC, ptD = r.corners
+                ptB = (int(ptB[0]), int(ptB[1]))
+                ptC = (int(ptC[0]), int(ptC[1]))
+                ptD = (int(ptD[0]), int(ptD[1]))
+                ptA = (int(ptA[0]), int(ptA[1]))
+
+                cv2.line(image, ptA, ptB, (0, 0, 255), 2)
+                cv2.line(image, ptB, ptC, (0, 255, 0), 2)
+                cv2.line(image, ptC, ptD, (0, 255, 0), 2)
+                cv2.line(image, ptD, ptA, (0, 255, 0), 2)
+
+                pixel_width = pow(
+                    pow((ptB[0] - ptA[0]), 2) + pow((ptB[1] - ptA[1]), 2), 0.5
+                )
+                distance = distance_to_camera(pixel_width)
+                cv2.putText(
+                    image,
+                    str(round(distance, 2)),
+                    (ptA[0], ptA[1] - 15),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.5,
+                    (0, 255, 0),
+                    2,
+                )
+
+        return image
+
+
+def distance_to_camera(pixel_width):
+    knownWidth = 15
+    focalLength = 160
+
+    return (knownWidth * focalLength) / pixel_width
 
 
 def main():

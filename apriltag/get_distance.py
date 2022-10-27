@@ -5,7 +5,7 @@ import cv2
 
 
 def distance_to_camera(knownWidth, focalLength, perWidth):
-    return (knownWidth * focalLength) / perWidth 
+    return (knownWidth * focalLength) / perWidth
 
 
 def init_cam(camera):
@@ -15,7 +15,7 @@ def init_cam(camera):
 
 def main():
     KNOWN_WIDTH = 15
-    KNOWN_DISTANCE =30 
+    KNOWN_DISTANCE = 30
     focalLength = 160
 
     camera = cv2.VideoCapture(-1)
@@ -50,7 +50,7 @@ def main():
         cv2.line(image, ptD, ptA, (0, 255, 0), 2)
         # draw the center (x, y)-coordinates of the AprilTag
         cv2.circle(image, ptA, 5, (0, 0, 255), -1)
-        
+
         # draw the tag family on the image
         pixel_width = pow(pow((ptB[0] - ptA[0]), 2) + pow((ptB[1] - ptA[1]), 2), 0.5)
         distance = distance_to_camera(KNOWN_WIDTH, focalLength, pixel_width)
@@ -60,7 +60,7 @@ def main():
         cv2.putText(
             image,
             # tagFamily,
-            str(round(distance,2)),
+            str(round(distance, 2)),
             (ptA[0], ptA[1] - 15),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.5,
@@ -74,7 +74,6 @@ def main():
     # cv2.waitKey(0)
 
     camera.release()
-
 
     # focalLength = (pixel_width * KNOWN_DISTANCE) / KNOWN_WIDTH
     # print(focalLength)
