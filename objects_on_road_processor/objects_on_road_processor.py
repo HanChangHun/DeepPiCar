@@ -26,7 +26,7 @@ class ObjectsOnRoadProcessor(object):
         self,
         car=None,
         speed_limit=40,
-        model="objects_on_road_processor/model/efficientdet-lite_edgetpu.tflite",
+        model_path="objects_on_road_processor/model/efficientdet-lite_edgetpu.tflite",
         label="objects_on_road_processor/model/obj_det_labels.txt",
         width=320,
         height=180,
@@ -46,8 +46,8 @@ class ObjectsOnRoadProcessor(object):
         self.labels = read_label_file(label)
 
         # initial edge TPU engine
-        logging.info("Initialize Edge TPU with model %s..." % model)
-        self.interpreter = make_interpreter(model)
+        logging.info("Initialize Edge TPU with model %s..." % model_path)
+        self.interpreter = make_interpreter(model_path)
         self.interpreter.allocate_tensors()
 
         self.min_confidence = 0.3
