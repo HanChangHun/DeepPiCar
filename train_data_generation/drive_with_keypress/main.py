@@ -55,7 +55,7 @@ class KeypressDrive:
     def write_data(self):
         _, image = self.camera.read()
         cv2.imwrite(
-            str(self.lab_dir / f"frame_{self.idx:06}_{int(self.cur_angle + 0.5)}.png"),
+            str(self.lab_dir / f"frame_{self.idx:06}_{int(self.cur_angle + 0.5)}.JPEG"),
             image,
         )
         self.idx += 1
