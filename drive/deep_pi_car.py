@@ -17,13 +17,14 @@ _SHOW_IMAGE = False
 
 
 class DeepPiCar(object):
-    def __init__(self):
+    def __init__(self, initial_speed=0):
         """Init camera and wheels"""
         logging.info("Creating a DeepPiCar...")
 
         picar.setup()
         self.__SCREEN_WIDTH = 320
         self.__SCREEN_HEIGHT = 180
+        self.initial_speed = initial_speed
 
         logging.debug("Set up camera")
         self.camera = cv2.VideoCapture(-1)
@@ -43,7 +44,9 @@ class DeepPiCar(object):
         )  # Steering Range is 45 (left) - 90 (center) - 135 (right)
 
         self.lane_follower = LaneFollowerEdgeTPU(self)
-        self.traffic_sign_processor = ObjectsOnRoadProcessor(self)
+        self.traffic_sign_processor = ObjectsOnRoadProcessor(
+            self, speed_limit=self.initial_speed
+        )
 
         date_str = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
         self.video_save_dir = Path(f"drive/data/{date_str}")
@@ -124,7 +127,7 @@ class DeepPiCar(object):
 
 
 def main():
-    with DeepPiCar() as car:
+    with DeepPiCar(initial_speed=30) as car:
         try:
             car.drive(30)
         except KeyboardInterrupt:
@@ -137,7 +140,7 @@ def main():
 
 if __name__ == "__main__":
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format="%(levelname)-5s:%(asctime)s.%(msecs)03d: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )

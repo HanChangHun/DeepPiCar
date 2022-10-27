@@ -52,7 +52,7 @@ class ObjectsOnRoadProcessor(object):
         self.interpreter = make_interpreter(model)
         self.interpreter.allocate_tensors()
 
-        self.min_confidence = 0.30
+        self.min_confidence = 0.3
         self.num_of_objects = 3
         logging.info("Initialize Edge TPU with model done.")
 
@@ -74,8 +74,8 @@ class ObjectsOnRoadProcessor(object):
         # Main entry point of the Road Object Handler
         logging.debug("Processing objects.................................")
         objects, final_frame = self.detect_objects(frame)
-        # self.control_car(objects)
-        logging.debug("Processing objects END..............................")
+        self.control_car(objects)
+        logging.debug("Processing objects END.............................")
 
         return final_frame
 
@@ -83,28 +83,16 @@ class ObjectsOnRoadProcessor(object):
         logging.debug("Control car...")
         car_state = {"speed": self.speed_limit, "speed_limit": self.speed_limit}
 
-        if len(objects) == 0:
-            logging.debug(
-                "No objects detected, drive at speed limit of %s." % self.speed_limit
-            )
-
-        contain_stop_sign = False
         for obj in objects:
             obj_label = self.labels[obj.label_id]
             processor = self.traffic_objects[obj.label_id]
-            if processor.is_close_by(obj, self.height):
+            if processor.is_close_by(obj, self.height, min_height_pct=0):
                 processor.set_car_state(car_state)
             else:
                 logging.debug(
                     "[%s] object detected, but it is too far, ignoring. " % obj_label
                 )
-            if obj_label == "Stop":
-                contain_stop_sign = True
-
-        if not contain_stop_sign:
-            self.traffic_objects[5].clear()
-
-        self.resume_driving(car_state)
+                self.resume_driving(car_state)
 
     def resume_driving(self, car_state):
         old_speed = self.speed
@@ -183,76 +171,6 @@ def draw_objects(draw, objs, scale_factor, labels):
             fill=color,
             font=font,
         )
-
-
-############################
-# Test Functions
-############################
-def test_photo(file):
-    object_processor = ObjectsOnRoadProcessor()
-    frame = cv2.imread(file)
-    combo_image = object_processor.process_objects_on_road(frame)
-    show_image("Detected Objects", combo_image)
-
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-
-def test_stop_sign():
-    # this simulates a car at stop sign
-    object_processor = ObjectsOnRoadProcessor()
-    frame = cv2.imread("/home/pi/DeepPiCar/driver/data/objects/stop_sign.jpg")
-    combo_image = object_processor.process_objects_on_road(frame)
-    show_image("Stop 1", combo_image)
-    time.sleep(1)
-    frame = cv2.imread("/home/pi/DeepPiCar/driver/data/objects/stop_sign.jpg")
-    combo_image = object_processor.process_objects_on_road(frame)
-    show_image("Stop 2", combo_image)
-    time.sleep(2)
-    frame = cv2.imread("/home/pi/DeepPiCar/driver/data/objects/stop_sign.jpg")
-    combo_image = object_processor.process_objects_on_road(frame)
-    show_image("Stop 3", combo_image)
-    time.sleep(1)
-    frame = cv2.imread("/home/pi/DeepPiCar/driver/data/objects/green_light.jpg")
-    combo_image = object_processor.process_objects_on_road(frame)
-    show_image("Stop 4", combo_image)
-
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-
-def test_video(video_file):
-    object_processor = ObjectsOnRoadProcessor()
-    cap = cv2.VideoCapture(video_file + ".avi")
-
-    # skip first second of video.
-    for i in range(3):
-        _, frame = cap.read()
-
-    video_type = cv2.VideoWriter_fourcc(*"XVID")
-    date_str = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
-    video_overlay = cv2.VideoWriter(
-        "%s_overlay_%s.avi" % (video_file, date_str), video_type, 20.0, (320, 240)
-    )
-    try:
-        i = 0
-        while cap.isOpened():
-            _, frame = cap.read()
-            cv2.imwrite("%s_%03d.png" % (video_file, i), frame)
-
-            combo_image = object_processor.process_objects_on_road(frame)
-            cv2.imwrite("%s_overlay_%03d.png" % (video_file, i), combo_image)
-            video_overlay.write(combo_image)
-
-            cv2.imshow("Detected Objects", combo_image)
-
-            i += 1
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                break
-    finally:
-        cap.release()
-        video_overlay.release()
-        cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
