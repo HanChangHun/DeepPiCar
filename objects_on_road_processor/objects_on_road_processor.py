@@ -70,10 +70,15 @@ class ObjectsOnRoadProcessor(object):
 
         self.traffic_objects = {0: Person()}
 
+        self.durations = []
+
     def process_objects_on_road(self, frame):
         # Main entry point of the Road Object Handler
         logging.debug("Processing objects.................................")
+        start_time = time.perf_counter()
         objects, final_frame = self.detect_objects(frame)
+        duration = time.perf_counter() - start_time
+        self.durations.append(duration)
         self.control_car(objects)
         logging.debug("Processing objects END.............................")
 
@@ -94,10 +99,9 @@ class ObjectsOnRoadProcessor(object):
                 )
             self.resume_driving(car_state)
 
-        if len(objects) == 0:
-            car_state["speed"] = self.speed_limit
-            self.resume_driving(car_state)
-
+        # if len(objects) == 0:
+        #     car_state["speed"] = self.speed_limit
+        #     self.resume_driving(car_state)
 
     def resume_driving(self, car_state):
         old_speed = self.speed
