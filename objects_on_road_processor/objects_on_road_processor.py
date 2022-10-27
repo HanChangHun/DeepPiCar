@@ -77,7 +77,7 @@ class ObjectsOnRoadProcessor(object):
         logging.debug("Processing objects.................................")
         start_time = time.perf_counter()
         objects, final_frame = self.detect_objects(frame)
-        duration = time.perf_counter() - start_time
+        duration = (time.perf_counter() - start_time) * 1000
         self.durations.append(duration)
         self.control_car(objects)
         logging.debug("Processing objects END.............................")

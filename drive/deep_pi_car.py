@@ -127,9 +127,10 @@ class DeepPiCar(object):
 
 
 def main():
-    with DeepPiCar(initial_speed=30) as car:
+    speed = 80
+    with DeepPiCar(initial_speed=speed) as car:
         try:
-            car.drive(30)
+            car.drive(speed)
         except KeyboardInterrupt:
             car.cleanup()
             print_statistics(car)
