@@ -45,24 +45,20 @@ class DeepPiCar(object):
 
         # self.lane_follower = LaneFollowerEdgeTPU(
         #     self,
-        #     show_image=self.show_image,
         # )
         # self.traffic_sign_processor = ObjectsOnRoadProcessor(
         #     self,
         #     speed_limit=self.initial_speed,
-        #     show_image=self.show_image,
         # )
 
         self.lane_follower = LaneFollowerEdgeTPU(
             self,
             model_path="co_compiled_model/lane_navigation_w_pretrain_final_edgetpu.tflite",
-            show_image=self.show_image,
         )
         self.traffic_sign_processor = ObjectsOnRoadProcessor(
             self,
             model_path="co_compiled_model/efficientdet-lite_edgetpu.tflite",
             speed_limit=self.initial_speed,
-            show_image=self.show_image,
         )
 
         date_str = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
@@ -90,7 +86,7 @@ class DeepPiCar(object):
     def init_cam(self):
         for _ in range(50):
             _, image_lane = self.camera.read()
-            show_image("Lane Lines", image_lane)
+            show_image("Lane Lines", image_lane,self.show_image)
 
     def __enter__(self):
         return self
@@ -159,6 +155,7 @@ def main():
         help="Score threshold for detected objects",
     )
     parser.add_argument("--show_image", action="store_true")
+    parser.set_defaults(show_image=False)
 
     args = parser.parse_args()
 
