@@ -69,7 +69,7 @@ class DeepPiCar(object):
         self.video_save_dir = Path(f"drive/data/{date_str}")
         self.video_save_dir.mkdir(exist_ok=True, parents=True)
 
-        self.fourcc = cv2.VideoWriter_fourcc(*"XVID")
+        self.fourcc = cv2.VideoWriter_fourcc(*"DIVX")
         self.video_orig = self.create_video_recorder(
             str(self.video_save_dir / "car_video.avi")
         )
@@ -115,12 +115,10 @@ class DeepPiCar(object):
     def drive(self, speed=0):
         logging.info("Starting to drive at speed %s..." % speed)
         self.back_wheels.speed = speed
-        i = 0
         while self.camera.isOpened():
             _, image_lane = self.camera.read()
             show_image("orig", image_lane, self.show_image)
             image_objs = image_lane.copy()
-            i += 1
             self.video_orig.write(image_lane)
 
             image_objs = self.process_objects_on_road(image_objs)
