@@ -11,7 +11,7 @@ from lane_navigation.lane_follower_edgetpu import LaneFollowerEdgeTPU
 from drive.utils import print_statistics, show_image
 
 
-# from objects_on_road_processor import ObjectsOnRoadProcessor
+from objects_on_road_processor.objects_on_road_processor import ObjectsOnRoadProcessor
 
 _SHOW_IMAGE = False
 
@@ -43,7 +43,7 @@ class DeepPiCar(object):
         )  # Steering Range is 45 (left) - 90 (center) - 135 (right)
 
         self.lane_follower = LaneFollowerEdgeTPU(self)
-        # self.traffic_sign_processor = ObjectsOnRoadProcessor(self)
+        self.traffic_sign_processor = ObjectsOnRoadProcessor(self)
 
         date_str = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
         self.video_save_dir = Path(f"deep_pi_car/data/{date_str}")
@@ -115,7 +115,7 @@ class DeepPiCar(object):
                 break
 
     def process_objects_on_road(self, image):
-        # image = self.traffic_sign_processor.process_objects_on_road(image)
+        image = self.traffic_sign_processor.process_objects_on_road(image)
         return image
 
     def follow_lane(self, image):
