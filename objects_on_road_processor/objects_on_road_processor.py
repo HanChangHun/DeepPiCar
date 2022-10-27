@@ -45,9 +45,7 @@ class ObjectsOnRoadProcessor(object):
         self.speed = speed_limit
 
         # initialize TensorFlow models
-        with open(label, "r") as f:
-            pairs = (l.strip().split(maxsplit=1) for l in f.readlines())
-            self.labels = dict((int(k), v) for k, v in pairs)
+        self.labels = read_label_file(label)
 
         # initial edge TPU engine
         logging.info("Initialize Edge TPU with model %s..." % model)
