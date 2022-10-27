@@ -86,7 +86,7 @@ class DeepPiCar(object):
     def init_cam(self):
         for _ in range(50):
             _, image_lane = self.camera.read()
-            show_image("Lane Lines", image_lane,self.show_image)
+            show_image("Lane Lines", image_lane, self.show_image)
 
     def __enter__(self):
         return self
@@ -117,9 +117,9 @@ class DeepPiCar(object):
             image_objs = image_lane.copy()
             self.video_orig.write(image_lane)
 
-            image_objs = self.process_objects_on_road(image_objs)
-            self.video_objs.write(image_objs)
-            show_image("Detected Objects", image_objs, self.show_image)
+            # image_objs = self.process_objects_on_road(image_objs)
+            # self.video_objs.write(image_objs)
+            # show_image("Detected Objects", image_objs, self.show_image)
 
             image_lane = self.follow_lane(image_lane)
             self.video_lane.write(image_lane)
