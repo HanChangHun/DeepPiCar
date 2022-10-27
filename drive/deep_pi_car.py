@@ -65,7 +65,7 @@ class DeepPiCar(object):
         self.video_save_dir = Path(f"drive/data/{date_str}")
         self.video_save_dir.mkdir(exist_ok=True, parents=True)
 
-        self.fourcc = cv2.VideoWriter_fourcc(*"DIVX")
+        self.fourcc = cv2.VideoWriter_fourcc(*"MJPG")
         self.video_orig = self.create_video_recorder(
             str(self.video_save_dir / "car_video.avi")
         )
