@@ -65,22 +65,22 @@ class DeepPiCar(object):
         self.video_save_dir = Path(f"drive/data/{date_str}")
         self.video_save_dir.mkdir(exist_ok=True, parents=True)
 
-        self.fourcc = cv2.VideoWriter_fourcc(*"XVID")
+        self.fourcc = cv2.VideoWriter_fourcc(*"DIVX")
         self.video_orig = self.create_video_recorder(
-            str(self.video_save_dir / "car_video.mp4")
+            str(self.video_save_dir / "car_video.avi")
         )
         self.video_lane = self.create_video_recorder(
-            str(self.video_save_dir / "car_video_lane.mp4")
+            str(self.video_save_dir / "car_video_lane.avi")
         )
         self.video_objs = self.create_video_recorder(
-            str(self.video_save_dir / "car_video_objs.mp4")
+            str(self.video_save_dir / "car_video_objs.avi")
         )
 
         logging.info("Created a DeepPiCar")
 
     def create_video_recorder(self, path):
         return cv2.VideoWriter(
-            path, self.fourcc, 20.0, (self.__SCREEN_WIDTH, self.__SCREEN_HEIGHT)
+            path, self.fourcc, 20.0, (int(self.camera.get(3)), int(self.camera.get(4)))
         )
 
     def init_cam(self):
