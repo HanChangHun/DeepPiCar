@@ -15,8 +15,6 @@ from pycoral.utils.dataset import read_label_file
 
 from objects_on_road_processor.traffic_objects import Person
 
-_SHOW_IMAGE = False
-
 
 class ObjectsOnRoadProcessor(object):
     """
@@ -154,9 +152,6 @@ class ObjectsOnRoadProcessor(object):
 ############################
 # Utility Functions
 ############################
-def show_image(title, frame, show=_SHOW_IMAGE):
-    if show:
-        cv2.imshow(title, frame)
 
 
 def draw_objects(draw, objs, scale_factor, labels):

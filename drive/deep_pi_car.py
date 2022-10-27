@@ -1,6 +1,7 @@
 import sys
 import logging
 import datetime
+import argparse
 from pathlib import Path
 
 import picar
@@ -13,13 +14,12 @@ from drive.utils import print_statistics, show_image
 
 from objects_on_road_processor.objects_on_road_processor import ObjectsOnRoadProcessor
 
-_SHOW_IMAGE = False
-
 
 class DeepPiCar(object):
-    def __init__(self, initial_speed=0):
+    def __init__(self, initial_speed=0, show_image=False):
         """Init camera and wheels"""
         logging.info("Creating a DeepPiCar...")
+        self.show_image = show_image
 
         picar.setup()
         self.__SCREEN_WIDTH = 320
@@ -43,9 +43,26 @@ class DeepPiCar(object):
             90
         )  # Steering Range is 45 (left) - 90 (center) - 135 (right)
 
-        self.lane_follower = LaneFollowerEdgeTPU(self)
+        # self.lane_follower = LaneFollowerEdgeTPU(
+        #     self,
+        #     show_image=self.show_image,
+        # )
+        # self.traffic_sign_processor = ObjectsOnRoadProcessor(
+        #     self,
+        #     speed_limit=self.initial_speed,
+        #     show_image=self.show_image,
+        # )
+
+        self.lane_follower = LaneFollowerEdgeTPU(
+            self,
+            model_path="co_compiled_model/lane_navigation_w_pretrain_final_edgetpu.tflite",
+            show_image=self.show_image,
+        )
         self.traffic_sign_processor = ObjectsOnRoadProcessor(
-            self, speed_limit=self.initial_speed
+            self,
+            model_path="co_compiled_model/efficientdet-lite_edgetpu.tflite",
+            speed_limit=self.initial_speed,
+            show_image=self.show_image,
         )
 
         date_str = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
@@ -101,21 +118,23 @@ class DeepPiCar(object):
         i = 0
         while self.camera.isOpened():
             _, image_lane = self.camera.read()
+            show_image("orig", image_lane, self.show_image)
             image_objs = image_lane.copy()
             i += 1
             self.video_orig.write(image_lane)
 
             image_objs = self.process_objects_on_road(image_objs)
             self.video_objs.write(image_objs)
-            show_image("Detected Objects", image_objs)
+            show_image("Detected Objects", image_objs, self.show_image)
 
             image_lane = self.follow_lane(image_lane)
             self.video_lane.write(image_lane)
-            show_image("Lane Lines", image_lane)
+            show_image("Lane Lines", image_lane, self.show_image)
 
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                self.cleanup()
-                break
+            if show_image:
+                if cv2.waitKey(1) & 0xFF == ord("q"):
+                    self.cleanup()
+                    break
 
     def process_objects_on_road(self, image):
         image = self.traffic_sign_processor.process_objects_on_road(image)
@@ -127,8 +146,26 @@ class DeepPiCar(object):
 
 
 def main():
-    speed = 80
-    with DeepPiCar(initial_speed=speed) as car:
+
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+
+    parser.add_argument(
+        "-s",
+        "--speed",
+        type=float,
+        default=0,
+        help="Score threshold for detected objects",
+    )
+    parser.add_argument("--show_image", action="store_true")
+
+    args = parser.parse_args()
+
+    speed = args.speed
+    show_image = args.show_image
+
+    with DeepPiCar(initial_speed=speed, show_image=show_image) as car:
         try:
             car.drive(speed)
         except KeyboardInterrupt:

@@ -9,8 +9,8 @@ class TrafficObject(object):
     @staticmethod
     def is_close_by(obj, frame_height, min_height_pct=0.05):
         # default: if a sign is 10% of the height of frame
-        print(obj.bbox)
-        rect_size = (obj.bbox.xmax - obj.bbox.xmin) * (obj.bbox.ymax - obj.bbox.ymin)
+        bbox = obj.bbox
+        rect_size = (bbox.xmax - bbox.xmin) * (bbox.ymax - bbox.ymin)
         return rect_size >= 350
 
 

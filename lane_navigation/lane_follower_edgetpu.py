@@ -9,11 +9,7 @@ from lane_navigation.utils import (
     display_heading_line,
     img_preprocess,
     predict_steer,
-    show_image,
 )
-
-
-_SHOW_IMAGE = False
 
 
 class LaneFollowerEdgeTPU(object):
@@ -21,8 +17,10 @@ class LaneFollowerEdgeTPU(object):
         self,
         car=None,
         model_path="lane_navigation/model/lane_navigation_w_pretrain_final_edgetpu.tflite",
+        show_image=False,
     ):
         self.car = car
+        self.show_image = show_image
 
         self.model = make_interpreter(model_path)
         self.model.allocate_tensors()
@@ -31,8 +29,6 @@ class LaneFollowerEdgeTPU(object):
         self.durations = []
 
     def follow_lane(self, frame):
-        show_image("orig", frame, _SHOW_IMAGE)
-
         start_time = time.perf_counter()
         self.curr_steering_angle = self.compute_steering_angle(frame)
         duration = (time.perf_counter() - start_time) * 1000
