@@ -84,15 +84,20 @@ class ObjectsOnRoadProcessor(object):
         car_state = {"speed": self.speed_limit, "speed_limit": self.speed_limit}
 
         for obj in objects:
-            obj_label = self.labels[obj.label_id]
-            processor = self.traffic_objects[obj.label_id]
+            obj_label = self.labels[obj.id]
+            processor = self.traffic_objects[obj.id]
             if processor.is_close_by(obj, self.height, min_height_pct=0):
                 processor.set_car_state(car_state)
             else:
                 logging.debug(
                     "[%s] object detected, but it is too far, ignoring. " % obj_label
                 )
-                self.resume_driving(car_state)
+            self.resume_driving(car_state)
+
+        if len(objects) == 0:
+            car_state["speed"] = self.speed_limit
+            self.resume_driving(car_state)
+
 
     def resume_driving(self, car_state):
         old_speed = self.speed
