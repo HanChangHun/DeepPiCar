@@ -149,9 +149,9 @@ class ObjectsOnRoadProcessor(object):
         )
         scale_factor = 320 / img_pil.width
 
-        draw_objects(ImageDraw.Draw(frame_RGB), objects, scale_factor, self.labels)
+        draw_objects(ImageDraw.Draw(img_pil), objects, scale_factor, self.labels)
 
-        return objects, img_pil
+        return objects, cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 
 
 ############################
