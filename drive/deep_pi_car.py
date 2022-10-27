@@ -46,7 +46,7 @@ class DeepPiCar(object):
         self.traffic_sign_processor = ObjectsOnRoadProcessor(self)
 
         date_str = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
-        self.video_save_dir = Path(f"deep_pi_car/data/{date_str}")
+        self.video_save_dir = Path(f"drive/data/{date_str}")
         self.video_save_dir.mkdir(exist_ok=True, parents=True)
 
         self.fourcc = cv2.VideoWriter_fourcc(*"XVID")
