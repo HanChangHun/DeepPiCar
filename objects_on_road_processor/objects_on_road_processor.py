@@ -8,9 +8,9 @@ from PIL import ImageFont
 import numpy as np
 
 
-import tflite_runtime.interpreter as tflite
 from pycoral.adapters import common
 from pycoral.adapters import detect
+from pycoral.utils.edgetpu import make_interpreter
 from pycoral.utils.dataset import read_label_file
 
 from objects_on_road_processor.traffic_objects import Person
@@ -49,7 +49,7 @@ class ObjectsOnRoadProcessor(object):
 
         # initial edge TPU engine
         logging.info("Initialize Edge TPU with model %s..." % model)
-        self.interpreter = tflite.Interpreter(model)
+        self.interpreter = make_interpreter(model)
         self.interpreter.allocate_tensors()
 
         self.min_confidence = 0.30
