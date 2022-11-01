@@ -1,4 +1,6 @@
+import math
 import sys
+import json
 import logging
 import datetime
 import argparse
@@ -6,8 +8,9 @@ from pathlib import Path
 
 import picar
 
+import numpy as np
 import cv2
-import apriltag
+import cv2.aruco as aruco
 
 from lane_navigation.lane_follower_edgetpu import LaneFollowerEdgeTPU
 from drive.utils import print_statistics, show_image
@@ -25,6 +28,7 @@ class DeepPiCar(object):
         picar.setup()
         self.__SCREEN_WIDTH = 320
         self.__SCREEN_HEIGHT = 180
+
         self.initial_speed = initial_speed
 
         logging.debug("Set up camera")
@@ -43,14 +47,6 @@ class DeepPiCar(object):
         self.front_wheels.turn(
             90
         )  # Steering Range is 45 (left) - 90 (center) - 135 (right)
-
-        # self.lane_follower = LaneFollowerEdgeTPU(
-        #     self,
-        # )
-        # self.traffic_sign_processor = ObjectsOnRoadProcessor(
-        #     self,
-        #     speed_limit=self.initial_speed,
-        # )
 
         self.lane_follower = LaneFollowerEdgeTPU(
             self,
@@ -80,8 +76,12 @@ class DeepPiCar(object):
             str(self.video_save_dir / "car_video_tag.avi")
         )
 
-        self.tag_options = apriltag.DetectorOptions(families="tag36h11")
-        self.tag_detector = apriltag.Detector(self.tag_options)
+        with open("calibrationValues0.json") as f:
+            cal_vals = json.load(f)
+        self.cam_mtx = np.array(cal_vals["camera_matrix"])
+        self.distor_factor = np.array(cal_vals["dist_coeff"])
+
+        self.aruco_dict = aruco.Dictionary_get(aruco.DICT_APRILTAG_36h11)
 
         logging.info("Created a DeepPiCar")
 
@@ -152,34 +152,26 @@ class DeepPiCar(object):
         return image
 
     def process_tag(self, image):
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        results = self.tag_detector.detect(gray)
-        if len(results) >= 0:
-            for r in results:
-                ptA, ptB, ptC, ptD = r.corners
-                ptB = (int(ptB[0]), int(ptB[1]))
-                ptC = (int(ptC[0]), int(ptC[1]))
-                ptD = (int(ptD[0]), int(ptD[1]))
-                ptA = (int(ptA[0]), int(ptA[1]))
+        corners, ids, _ = aruco.detectMarkers(image, self.aruco_dict)
+        rvec, tvec, _ = aruco.estimatePoseSingleMarkers(
+            corners, 0.05, self.cam_mtx, self.distor_factor
+        )
 
-                cv2.line(image, ptA, ptB, (0, 0, 255), 2)
-                cv2.line(image, ptB, ptC, (0, 255, 0), 2)
-                cv2.line(image, ptC, ptD, (0, 255, 0), 2)
-                cv2.line(image, ptD, ptA, (0, 255, 0), 2)
-
-                pixel_width = pow(
-                    pow((ptB[0] - ptA[0]), 2) + pow((ptB[1] - ptA[1]), 2), 0.5
+        if ids is not None:
+            for i in range(0, ids.size):
+                aruco.drawAxis(
+                    image, self.cam_mtx, self.distor_factor, rvec[0], tvec[0], 0.06
                 )
-                distance = distance_to_camera(pixel_width)
                 cv2.putText(
                     image,
-                    str(round(distance, 2)),
-                    (ptA[0], ptA[1] - 15),
+                    "%.1f cm -- %.0f degree"
+                    % ((tvec[0][0][2] * 100), (rvec[0][0][2] / math.pi * 180)),
+                    (0, 230),
                     cv2.FONT_HERSHEY_SIMPLEX,
                     0.5,
-                    (0, 255, 0),
-                    2,
+                    (244, 244, 244),
                 )
+                print((int)(tvec[0][0][2] * 1000))
 
         return image
 

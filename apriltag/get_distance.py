@@ -1,7 +1,12 @@
 # import the necessary packages
-import apriltag
+import json
+import math
+import time
 import argparse
+
+import numpy as np
 import cv2
+import cv2.aruco as aruco
 
 
 def distance_to_camera(knownWidth, focalLength, perWidth):
@@ -14,66 +19,34 @@ def init_cam(camera):
 
 
 def main():
-    KNOWN_WIDTH = 15
-    KNOWN_DISTANCE = 30
-    focalLength = 160
+    with open("calibrationValues0.json") as f:
+        cal_vals = json.load(f)
+    mtx = np.array(cal_vals["camera_matrix"])
+    distor = np.array(cal_vals["dist_coeff"])
 
-    camera = cv2.VideoCapture(-1)
-    camera.set(3, 320)
-    camera.set(4, 180)
-    init_cam(camera)
+    image = cv2.imread("apriltag/temp.jpg")
 
-    _, image = camera.read()
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    aruco_dict = aruco.Dictionary_get(aruco.DICT_APRILTAG_36h11)
+    corners, ids, _ = aruco.detectMarkers(image, aruco_dict)
+    rvec, tvec, _ = aruco.estimatePoseSingleMarkers(corners, 0.05, mtx, distor)
 
-    # define the AprilTags detector options and then detect the AprilTags
-    # in the input image
-    print("[INFO] detecting AprilTags...")
-    options = apriltag.DetectorOptions(families="tag36h11")
-    detector = apriltag.Detector(options)
-    results = detector.detect(gray)
-    print("[INFO] {} total AprilTags detected".format(len(results)))
+    if ids is not None:
+        for i in range(0, ids.size):
+            aruco.drawAxis(image, mtx, distor, rvec[0], tvec[0], 0.06)
+            cv2.putText(
+                image,
+                "%.1f cm -- %.0f degree"
+                % ((tvec[0][0][2] * 100), (rvec[0][0][2] / math.pi * 180)),
+                (0, 230),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (244, 244, 244),
+            )
+            print((int)(tvec[0][0][2] * 1000))
 
-    # loop over the AprilTag detection results
-    for r in results:
-        # extract the bounding box (x, y)-coordinates for the AprilTag
-        # and convert each of the (x, y)-coordinate pairs to integers
-        (ptA, ptB, ptC, ptD) = r.corners
-        ptB = (int(ptB[0]), int(ptB[1]))
-        ptC = (int(ptC[0]), int(ptC[1]))
-        ptD = (int(ptD[0]), int(ptD[1]))
-        ptA = (int(ptA[0]), int(ptA[1]))
-        # draw the bounding box of the AprilTag detection
-        cv2.line(image, ptA, ptB, (0, 0, 255), 2)
-        cv2.line(image, ptB, ptC, (0, 255, 0), 2)
-        cv2.line(image, ptC, ptD, (0, 255, 0), 2)
-        cv2.line(image, ptD, ptA, (0, 255, 0), 2)
-        # draw the center (x, y)-coordinates of the AprilTag
-        cv2.circle(image, ptA, 5, (0, 0, 255), -1)
-
-        # draw the tag family on the image
-        pixel_width = pow(pow((ptB[0] - ptA[0]), 2) + pow((ptB[1] - ptA[1]), 2), 0.5)
-        distance = distance_to_camera(KNOWN_WIDTH, focalLength, pixel_width)
-        print(distance)
-
-        tagFamily = r.tag_family.decode("utf-8")
-        cv2.putText(
-            image,
-            # tagFamily,
-            str(round(distance, 2)),
-            (ptA[0], ptA[1] - 15),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
-            (0, 255, 0),
-            2,
-        )
-        print("[INFO] tag family: {}".format(tagFamily))
-    # show the output image after AprilTag detection
-    cv2.imwrite("Image.jpg", image)
+    cv2.imwrite("apriltag/image2.jpg", image)
     # cv2.imshow("Image", image)
     # cv2.waitKey(0)
-
-    camera.release()
 
     # focalLength = (pixel_width * KNOWN_DISTANCE) / KNOWN_WIDTH
     # print(focalLength)
