@@ -142,7 +142,8 @@ class ObjectsOnRoadProcessor(object):
         objects = detect.get_objects(
             self.interpreter, score_threshold=self.min_confidence, image_scale=scale
         )
-        scale_factor = 320 / img_pil.width
+
+        scale_factor = self.width / img_pil.width
 
         draw_objects(ImageDraw.Draw(img_pil), objects, scale_factor, self.labels)
 
@@ -156,7 +157,7 @@ class ObjectsOnRoadProcessor(object):
 
 def draw_objects(draw, objs, scale_factor, labels):
     """Draws the bounding box and label for each object."""
-    COLORS = np.random.randint(0, 255, size=(len(labels), 3), dtype=np.uint8)
+    COLORS = np.random.randint(100, 255, size=(len(labels), 3), dtype=np.uint8)
     for obj in objs:
         bbox = obj.bbox
         color = tuple(int(c) for c in COLORS[obj.id])

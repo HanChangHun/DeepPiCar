@@ -5,6 +5,7 @@ import logging
 import datetime
 import argparse
 from pathlib import Path
+import time
 
 import picar
 
@@ -26,8 +27,8 @@ class DeepPiCar(object):
         self.show_image = show_image
 
         picar.setup()
-        self.__SCREEN_WIDTH = 320
-        self.__SCREEN_HEIGHT = 180
+        self.__SCREEN_WIDTH = 640
+        self.__SCREEN_HEIGHT = 360
 
         self.initial_speed = initial_speed
 
@@ -56,6 +57,8 @@ class DeepPiCar(object):
             self,
             model_path="co_compiled_model/efficientdet-lite_edgetpu.tflite",
             speed_limit=self.initial_speed,
+            width=self.__SCREEN_WIDTH,
+            height=self.__SCREEN_HEIGHT,
         )
 
         date_str = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
@@ -152,9 +155,10 @@ class DeepPiCar(object):
         return image
 
     def process_tag(self, image):
+        marker_length = 0.1
         corners, ids, _ = aruco.detectMarkers(image, self.aruco_dict)
         rvec, tvec, _ = aruco.estimatePoseSingleMarkers(
-            corners, 0.05, self.cam_mtx, self.distor_factor
+            corners, 0.1, self.cam_mtx, self.distor_factor
         )
 
         if ids is not None:
@@ -166,12 +170,12 @@ class DeepPiCar(object):
                     image,
                     "%.1f cm -- %.0f degree"
                     % ((tvec[0][0][2] * 100), (rvec[0][0][2] / math.pi * 180)),
-                    (0, 230),
+                    (0, 300),
                     cv2.FONT_HERSHEY_SIMPLEX,
-                    0.5,
+                    1.0,
                     (244, 244, 244),
                 )
-                print((int)(tvec[0][0][2] * 1000))
+                # print((int)(tvec[0][0][2] * 1000))
 
         return image
 
