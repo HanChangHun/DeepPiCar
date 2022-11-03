@@ -19,8 +19,8 @@ class KeypressDrive:
         picar.setup()
 
         self.camera = cv2.VideoCapture(-1)
-        self.camera.set(3, 320)
-        self.camera.set(4, 180)
+        self.camera.set(3, 640)
+        self.camera.set(4, 360)
 
         self.cur_angle = 90
         self.cur_speed = 0
