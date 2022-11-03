@@ -1,3 +1,4 @@
+import sys
 import time
 
 from pathlib import Path
@@ -5,6 +6,7 @@ import cv2
 
 import getch
 import picar
+from train_data_generation.webcam_video_stream import WebcamVideoStream
 
 # back_wheels.forward()
 # back_wheels.backward()
@@ -18,9 +20,7 @@ class KeypressDrive:
 
         picar.setup()
 
-        self.camera = cv2.VideoCapture(-1)
-        self.camera.set(3, 640)
-        self.camera.set(4, 360)
+        self.video_stream = WebcamVideoStream(-1).start()
 
         self.cur_angle = 90
         self.cur_speed = 0
@@ -30,7 +30,7 @@ class KeypressDrive:
 
         data_dir = Path("train_data_generation/data/drive_with_keypress")
         self.lab_cnt = len(list(data_dir.glob("*")))
-        self.lab_dir = data_dir / f"{self.lab_cnt}"
+        self.lab_dir = data_dir / f"{self.lab_cnt + 1}"
         self.lab_dir.mkdir(exist_ok=True, parents=True)
 
     def init_car(self):
@@ -38,22 +38,17 @@ class KeypressDrive:
         self.front_wheels.turn(90)
         self.cur_angle = 90
 
-    def init_cam(self):
-        for _ in range(50):
-            self.camera.read()
-        print("camera ready")
-
     def cleanup(self):
         self.back_wheels.speed = 0
         self.front_wheels.turn(90)
-        self.camera.release()
+        self.video_stream.stop()
         cv2.destroyAllWindows()
 
     def set_speed(self, speed):
         self.back_wheels.speed = speed
 
     def write_data(self):
-        _, image = self.camera.read()
+        image = self.video_stream.read()
         cv2.imwrite(
             str(self.lab_dir / f"frame_{self.idx:06}_{int(self.cur_angle + 0.5)}.JPEG"),
             image,
@@ -97,10 +92,8 @@ class KeypressDrive:
 
     def start(self):
         self.init_car()
-        self.init_cam()
         self.set_speed(self.cur_speed)
         print("start keypress drving")
-
         while True:
             key = getch.getch()
             if key == "w":
@@ -123,4 +116,8 @@ class KeypressDrive:
 
 if __name__ == "__main__":
     keypress_drive = KeypressDrive()
-    keypress_drive.start()
+    try:
+        keypress_drive.start()
+    except KeyboardInterrupt:
+        keypress_drive.cleanup()
+        sys.exit(0)
