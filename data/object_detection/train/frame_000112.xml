@@ -1,0 +1,26 @@
+<annotation>
+	<folder>train</folder>
+	<filename>frame_000112.JPEG</filename>
+	<path>C:\Users\Changhun\OneDrive\Programs\labelImg\data\object_detection\train\frame_000112.JPEG</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>480</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>person</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>327</xmin>
+			<ymin>196</ymin>
+			<xmax>345</xmax>
+			<ymax>225</ymax>
+		</bndbox>
+	</object>
+</annotation>
