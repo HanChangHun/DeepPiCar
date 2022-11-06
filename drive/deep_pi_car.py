@@ -19,6 +19,10 @@ from drive.utils import print_statistics, show_image
 
 from objects_on_road_processor.objects_on_road_processor import ObjectsOnRoadProcessor
 
+obj_det_model_path = (
+    "objects_on_road_processor/model/ssd_mobilenet_v2/ssd_mobilenet_v2_edgetpu.tflite"
+)
+
 
 class DeepPiCar(object):
     def __init__(self, initial_speed=0, show_image=False):
@@ -55,7 +59,7 @@ class DeepPiCar(object):
         )
         self.traffic_sign_processor = ObjectsOnRoadProcessor(
             self,
-            model_path="co_compiled_model/efficientdet-lite_edgetpu.tflite",
+            model_path=obj_det_model_path,
             speed_limit=self.initial_speed,
             width=self.__SCREEN_WIDTH,
             height=self.__SCREEN_HEIGHT,
@@ -131,10 +135,10 @@ class DeepPiCar(object):
             self.video_objs.write(image_objs)
             show_image("Detected Objects", image_objs, self.show_image)
 
-            image_lane = image_org.copy()
-            image_lane = self.follow_lane(image_lane)
-            self.video_lane.write(image_lane)
-            show_image("Lane Lines", image_lane, self.show_image)
+            # image_lane = image_org.copy()
+            # image_lane = self.follow_lane(image_lane)
+            # self.video_lane.write(image_lane)
+            # show_image("Lane Lines", image_lane, self.show_image)
 
             image_tag = image_org.copy()
             image_tag = self.process_tag(image_tag)
