@@ -1,4 +1,3 @@
-item {
-    id: 1
-    name: 'person'
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:18732e323e9055b9bd2394ed2a64f6eb0bcc868e6953b7bbf2d525a44cea35ea
+size 38
