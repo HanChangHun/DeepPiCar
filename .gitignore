@@ -3,6 +3,11 @@ drive/data
 *.HMSLCHD
 *.tfevents.*
 *.ckpt*.*
+*.data-*
+*.index
+*.tar.gz
+*.pb
+*.pbtxt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
