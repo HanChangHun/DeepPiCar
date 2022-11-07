@@ -19,9 +19,7 @@ from drive.utils import print_statistics, show_image
 
 from objects_on_road_processor.objects_on_road_processor import ObjectsOnRoadProcessor
 
-obj_det_model_path = (
-    "objects_on_road_processor/model/ssd_mobilenet_v2/ssd_mobilenet_v2_edgetpu.tflite"
-)
+obj_det_model_path = "objects_on_road_processor/model/efficientdet_lite_0/efficientdet-lite_edgetpu.tflite"
 
 
 class DeepPiCar(object):

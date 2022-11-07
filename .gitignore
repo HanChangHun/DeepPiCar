@@ -2,6 +2,7 @@ ctags
 drive/data
 *.HMSLCHD
 *.tfevents.*
+*.ckpt*.*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
