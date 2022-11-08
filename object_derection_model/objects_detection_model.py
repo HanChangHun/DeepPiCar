@@ -145,7 +145,7 @@ class ObjectDetectionModel(object):
 
         scale_factor = self.width / img_pil.width
 
-        draw_objects(ImageDraw.Draw(img_pil), objects, scale_factor, self.labels)
+        # draw_objects(ImageDraw.Draw(img_pil), objects, scale_factor, self.labels)
 
         return objects, cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 

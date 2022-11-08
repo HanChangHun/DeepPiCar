@@ -15,6 +15,7 @@ import cv2.aruco as aruco
 
 from lane_navigation_model.lane_follower_edgetpu import LaneNavigationModelEdgeTPU
 from drive.utils import print_statistics, show_image
+from drive.webcam_video_stream import WebcamVideoStream
 
 
 from object_derection_model.objects_detection_model import ObjectDetectionModel
@@ -44,10 +45,9 @@ class DeepPiCar(object):
         self.initial_speed = initial_speed
 
         logging.debug("Set up camera")
-        self.camera = cv2.VideoCapture(-1)
-        self.camera.set(3, self.__SCREEN_WIDTH)
-        self.camera.set(4, self.__SCREEN_HEIGHT)
-        self.init_cam()
+        self.camera = WebcamVideoStream(
+            src=-1, screen_width=self.__SCREEN_WIDTH, screen_hight=self.__SCREEN_HEIGHT
+        ).start()
 
         logging.debug("Set up back wheels")
         self.back_wheels = picar.back_wheels.Back_Wheels()
@@ -123,7 +123,7 @@ class DeepPiCar(object):
         logging.info("Stopping the car, resetting hardware.")
         self.back_wheels.speed = 0
         self.front_wheels.turn(90)
-        self.camera.release()
+        self.camera.stop()
         self.video_orig.release()
         # self.video_lane.release()
         # self.video_objs.release()
