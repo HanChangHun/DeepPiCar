@@ -6,7 +6,7 @@ import cv2
 
 import getch
 import picar
-from train_data_generation.webcam_video_stream import WebcamVideoStream
+from drive.webcam_video_stream import WebcamVideoStream
 
 # back_wheels.forward()
 # back_wheels.backward()
