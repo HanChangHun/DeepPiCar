@@ -13,18 +13,26 @@ import numpy as np
 import cv2
 import cv2.aruco as aruco
 
-from lane_navigation.lane_follower_edgetpu import LaneFollowerEdgeTPU
+from lane_navigation_model.lane_follower_edgetpu import LaneNavigationModelEdgeTPU
 from drive.utils import print_statistics, show_image
 
 
-from objects_on_road_processor.objects_on_road_processor import ObjectsOnRoadProcessor
+from object_derection_model.objects_detection_model import ObjectDetectionModel
 
+lane_nav_model_path = (
+    "co_compiled_model/lane_navigation_w_pretrain_final_edgetpu.tflite"
+)
 obj_det_model_path = "objects_on_road_processor/model/efficientdet_lite_0/efficientdet-lite_edgetpu.tflite"
 obj_det_model_path = "objects_on_road_processor/model/ssd_mobilenet_v1_ppn/tflite/ssd_mobilenet_v1_ppn_edgetpu.tflite"
 
 
 class DeepPiCar(object):
-    def __init__(self, initial_speed=0, show_image=False):
+    def __init__(
+        self,
+        initial_speed=0,
+        show_image=False,
+        video_save_dir=Path("drive/data"),
+    ):
         """Init camera and wheels"""
         logging.info("Creating a DeepPiCar...")
         self.show_image = show_image
@@ -52,11 +60,10 @@ class DeepPiCar(object):
             90
         )  # Steering Range is 45 (left) - 90 (center) - 135 (right)
 
-        self.lane_follower = LaneFollowerEdgeTPU(
-            self,
-            model_path="co_compiled_model/lane_navigation_w_pretrain_final_edgetpu.tflite",
+        self.lane_follower = LaneNavigationModelEdgeTPU(
+            self, model_path=lane_nav_model_path
         )
-        self.traffic_sign_processor = ObjectsOnRoadProcessor(
+        self.obj_det_model = ObjectDetectionModel(
             self,
             model_path=obj_det_model_path,
             speed_limit=self.initial_speed,
@@ -65,29 +72,30 @@ class DeepPiCar(object):
         )
 
         date_str = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
-        self.video_save_dir = Path(f"drive/data/{date_str}")
+        self.video_save_dir = Path(video_save_dir / f"{date_str}")
         self.video_save_dir.mkdir(exist_ok=True, parents=True)
 
-        self.fourcc = cv2.VideoWriter_fourcc(*"DIVX")
+        self.fourcc = cv2.VideoWriter_fourcc(*"MP4V")
         self.video_orig = self.create_video_recorder(
-            str(self.video_save_dir / "car_video.avi")
-        )
-        self.video_lane = self.create_video_recorder(
-            str(self.video_save_dir / "car_video_lane.avi")
-        )
-        self.video_objs = self.create_video_recorder(
-            str(self.video_save_dir / "car_video_objs.avi")
-        )
-        self.video_tag = self.create_video_recorder(
-            str(self.video_save_dir / "car_video_tag.avi")
+            str(self.video_save_dir / "car_video.mp4")
         )
 
-        with open("calibrationValues0.json") as f:
-            cal_vals = json.load(f)
-        self.cam_mtx = np.array(cal_vals["camera_matrix"])
-        self.distor_factor = np.array(cal_vals["dist_coeff"])
+        # self.video_lane = self.create_video_recorder(
+        #     str(self.video_save_dir / "car_video_lane.mp4")
+        # )
+        # self.video_objs = self.create_video_recorder(
+        #     str(self.video_save_dir / "car_video_objs.mp4")
+        # )
+        # self.video_tag = self.create_video_recorder(
+        #     str(self.video_save_dir / "car_video_tag.mp4")
+        # )
 
-        self.aruco_dict = aruco.Dictionary_get(aruco.DICT_APRILTAG_36h11)
+        # with open("calibrationValues0.json") as f:
+        #     cal_vals = json.load(f)
+        # self.cam_mtx = np.array(cal_vals["camera_matrix"])
+        # self.distor_factor = np.array(cal_vals["dist_coeff"])
+
+        # self.aruco_dict = aruco.Dictionary_get(aruco.DICT_APRILTAG_36h11)
 
         logging.info("Created a DeepPiCar")
 
@@ -99,7 +107,7 @@ class DeepPiCar(object):
     def init_cam(self):
         for _ in range(50):
             _, image_lane = self.camera.read()
-            show_image("Lane Lines", image_lane, self.show_image)
+            show_image("orig", image_lane, self.show_image)
 
     def __enter__(self):
         return self
@@ -117,8 +125,9 @@ class DeepPiCar(object):
         self.front_wheels.turn(90)
         self.camera.release()
         self.video_orig.release()
-        self.video_lane.release()
-        self.video_objs.release()
+        # self.video_lane.release()
+        # self.video_objs.release()
+        # self.video_tag.release()
         cv2.destroyAllWindows()
 
     def drive(self, speed=0):
@@ -131,7 +140,7 @@ class DeepPiCar(object):
 
             image_objs = image_org.copy()
             image_objs = self.process_objects_on_road(image_objs)
-            self.video_objs.write(image_objs)
+            # self.video_objs.write(image_objs)
             show_image("Detected Objects", image_objs, self.show_image)
 
             # image_lane = image_org.copy()
@@ -139,10 +148,10 @@ class DeepPiCar(object):
             # self.video_lane.write(image_lane)
             # show_image("Lane Lines", image_lane, self.show_image)
 
-            image_tag = image_org.copy()
-            image_tag = self.process_tag(image_tag)
-            self.video_tag.write(image_tag)
-            show_image("April Tag", image_tag, self.show_image)
+            # image_tag = image_org.copy()
+            # image_tag = self.process_tag(image_tag)
+            # self.video_tag.write(image_tag)
+            # show_image("April Tag", image_tag, self.show_image)
 
             if show_image:
                 if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -150,7 +159,7 @@ class DeepPiCar(object):
                     break
 
     def process_objects_on_road(self, image):
-        image = self.traffic_sign_processor.process_objects_on_road(image)
+        image = self.obj_det_model.process_objects_on_road(image)
         return image
 
     def follow_lane(self, image):
@@ -181,13 +190,6 @@ class DeepPiCar(object):
                 # print((int)(tvec[0][0][2] * 1000))
 
         return image
-
-
-def distance_to_camera(pixel_width):
-    knownWidth = 15
-    focalLength = 160
-
-    return (knownWidth * focalLength) / pixel_width
 
 
 def main():
