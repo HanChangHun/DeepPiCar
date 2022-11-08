@@ -110,7 +110,7 @@ class ModelRunner:
                     self.interpreters[0].set_tensor(tensor_index, self.preloaded_img2)
 
         elif task == "detection":
-            self.set_sized_input(
+            self.set_resized_input(
                 self.interpreters[0],
                 self.image.size,
                 lambda size: self.image.resize(size, Image.ANTIALIAS),
@@ -120,7 +120,7 @@ class ModelRunner:
             duration = (time.perf_counter() - st) * 1000
             return duration
 
-    def set_sized_input(self, interpreter, size, resize):
+    def set_resized_input(self, interpreter, size, resize):
         _, height, width, _ = interpreter.get_input_details()[0]["shape"]
         w, h = size
         scale = min(width / w, height / h)

@@ -13,7 +13,7 @@ from pycoral.adapters import detect
 from pycoral.utils.edgetpu import make_interpreter
 from pycoral.utils.dataset import read_label_file
 
-from object_derection_model.traffic_objects import Person
+from object_detection_model.traffic_objects import Person
 
 
 class ObjectDetectionModel(object):
@@ -26,8 +26,8 @@ class ObjectDetectionModel(object):
         self,
         car=None,
         speed_limit=40,
-        model_path="objects_on_road_processor/model/efficientdet-lite_edgetpu.tflite",
-        label="objects_on_road_processor/model/obj_det_labels.txt",
+        model_path="experiments/obj_det_sram/models/full/efficientdet-lite_edgetpu.tflite",
+        label="object_detection_model/model/obj_det_labels.txt",
         width=320,
         height=180,
     ):
@@ -50,7 +50,7 @@ class ObjectDetectionModel(object):
         self.interpreter = make_interpreter(model_path)
         self.interpreter.allocate_tensors()
 
-        self.min_confidence = 0.3
+        self.min_confidence = 0.5
         self.num_of_objects = 3
         logging.info("Initialize Edge TPU with model done.")
 
@@ -72,12 +72,16 @@ class ObjectDetectionModel(object):
 
     def process_objects_on_road(self, frame):
         # Main entry point of the Road Object Handler
-        logging.debug("Processing objects.................................")
         start_time = time.perf_counter()
+        logging.debug("Processing objects.................................")
+
         objects, final_frame = self.detect_objects(frame)
+
         duration = (time.perf_counter() - start_time) * 1000
         self.durations.append(duration)
+
         self.control_car(objects)
+
         logging.debug("Processing objects END.............................")
 
         return final_frame
@@ -86,6 +90,7 @@ class ObjectDetectionModel(object):
         logging.debug("Control car...")
         car_state = {"speed": self.speed_limit, "speed_limit": self.speed_limit}
 
+        logging.info(f"{len(objects)} objects are found")
         for obj in objects:
             obj_label = self.labels[obj.id]
             processor = self.traffic_objects[obj.id]
@@ -114,7 +119,6 @@ class ObjectDetectionModel(object):
 
         if self.speed == 0:
             logging.debug("full stop for 1 seconds")
-            time.sleep(1)
 
     def set_speed(self, speed):
         # Use this setter, so we can test this class without a car attached
@@ -137,14 +141,13 @@ class ObjectDetectionModel(object):
             img_pil.size,
             lambda size: img_pil.resize(size, Image.ANTIALIAS),
         )
-
         self.interpreter.invoke()
+
         objects = detect.get_objects(
             self.interpreter, score_threshold=self.min_confidence, image_scale=scale
         )
 
-        scale_factor = self.width / img_pil.width
-
+        # scale_factor = self.width / img_pil.width
         # draw_objects(ImageDraw.Draw(img_pil), objects, scale_factor, self.labels)
 
         return objects, cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)

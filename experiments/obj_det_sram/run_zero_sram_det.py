@@ -38,7 +38,7 @@ if __name__ == "__main__":
     interpreter.invoke()
 
     time_spans = []
-    for _ in range(100):
+    for _ in range(20):
         st = time.perf_counter()
         interpreter.invoke()
         time_spans.append((time.perf_counter() - st) * 1000)
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     print("Average inference time: %f ms" % (sum(time_spans) / len(time_spans)))
 
     time_spans = []
-    for _ in range(100):
+    for _ in range(20):
         st = time.perf_counter()
         e2e_inference(interpreter, image_path)
         time_spans.append((time.perf_counter() - st) * 1000)
