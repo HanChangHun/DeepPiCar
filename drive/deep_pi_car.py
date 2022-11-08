@@ -35,8 +35,8 @@ class DeepPiCar:
         self.initial_speed = initial_speed
 
         # logging.debug("Set up camera")
-        self.__SCREEN_WIDTH = 320
-        self.__SCREEN_HEIGHT = 180
+        self.__SCREEN_WIDTH = 640
+        self.__SCREEN_HEIGHT = 360
 
         # self.camera = cv2.VideoCapture(-1)
         # self.camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))
