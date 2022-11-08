@@ -38,12 +38,15 @@ class DeepPiCar:
         self.__SCREEN_WIDTH = 320
         self.__SCREEN_HEIGHT = 180
 
-        self.camera = cv2.VideoCapture(-1)
-        self.camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))
-        self.camera.set(cv2.CAP_PROP_FPS, 5)
-        self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, self.__SCREEN_WIDTH)
-        self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, self.__SCREEN_HEIGHT)
-        self.init_cam()
+        # self.camera = cv2.VideoCapture(-1)
+        # self.camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))
+        # self.camera.set(cv2.CAP_PROP_FPS, 5)
+        # self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, self.__SCREEN_WIDTH)
+        # self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, self.__SCREEN_HEIGHT)
+        # self.init_cam()
+        self.camera = WebcamVideoStream(
+            -1, self.__SCREEN_WIDTH, self.__SCREEN_HEIGHT, 0.05
+        ).start()
 
         logging.debug("Set up back wheels")
         self.back_wheels = picar.back_wheels.Back_Wheels()
@@ -81,31 +84,23 @@ class DeepPiCar:
         self.video_save_dir = Path(video_save_dir / f"{date_str}")
         self.video_save_dir.mkdir(exist_ok=True, parents=True)
 
-        self.fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        self.fourcc = cv2.VideoWriter_fourcc(*"DIVX")
         self.video_orig = self.create_video_recorder(
-            str(self.video_save_dir / "car_video.mp4")
+            str(self.video_save_dir / "car_video.avi")
         )
-
         # self.video_lane = self.create_video_recorder(
-        #     str(self.video_save_dir / "car_video_lane.mp4")
+        #     str(self.video_save_dir / "car_video_lane.avi")
         # )
         # self.video_objs = self.create_video_recorder(
-        #     str(self.video_save_dir / "car_video_objs.mp4")
+        #     str(self.video_save_dir / "car_video_objs.avi")
         # )
         # self.video_tag = self.create_video_recorder(
-        #     str(self.video_save_dir / "car_video_tag.mp4")
+        #     str(self.video_save_dir / "car_video_tag.avi")
         # )
-
-        with open("calibrationValues0.json") as f:
-            cal_vals = json.load(f)
-        self.cam_mtx = np.array(cal_vals["camera_matrix"])
-        self.distor_factor = np.array(cal_vals["dist_coeff"])
-
-        self.aruco_dict = aruco.Dictionary_get(aruco.DICT_APRILTAG_36h11)
 
         logging.info("Created a DeepPiCar")
 
-    def __init__(self) -> None:
+    def init_cam(self):
         for _ in range(50):
             self.camera.read()
 
@@ -113,11 +108,8 @@ class DeepPiCar:
         return cv2.VideoWriter(
             path,
             self.fourcc,
-            5,
-            (
-                int(self.camera.get(cv2.CAP_PROP_FRAME_WIDTH)),
-                int(self.camera.get(cv2.CAP_PROP_FRAME_HEIGHT)),
-            ),
+            5.0,
+            (int(self.camera.get(3)), int(self.camera.get(4))),
         )
 
     def warmup_obj_det(self):
@@ -138,23 +130,28 @@ class DeepPiCar:
         logging.info("Stopping the car, resetting hardware.")
         self.back_wheels.speed = 0
         self.front_wheels.turn(90)
-        self.camera.release()
         self.video_orig.release()
+        self.camera.stop()
+        self.camera.stream.release()
+        # self.camera.release()
         # self.video_lane.release()
         # self.video_objs.release()
         # self.video_tag.release()
-        # cv2.destroyAllWindows()
+        cv2.destroyAllWindows()
 
     def drive(self, speed=0):
         logging.info("Starting to drive at speed %s..." % speed)
         self.back_wheels.speed = speed
-        image_path = "data/object_detection/test/frame_000004.JPEG"
-        image_org = cv2.imread(image_path)
+
+        frame_cnt = 0
         while self.camera.isOpened():
             time.sleep(1e-9)
             _, image_org = self.camera.read()
-            show_image("orig", image_org, self.show_image)
             self.video_orig.write(image_org)
+            show_image("orig", image_org, self.show_image)
+
+            # frame_cnt += 1
+            # cv2.imwrite(str(self.video_save_dir / f"frame_{frame_cnt}.png"), image_org)
 
             # image_objs = image_org.copy()
             image_objs = self.obj_det_model.process_objects_on_road(image_org)
@@ -173,31 +170,6 @@ class DeepPiCar:
 
     def follow_lane(self, image):
         image = self.lane_follower.follow_lane(image)
-        return image
-
-    def process_tag(self, image):
-        marker_length = 0.1
-        corners, ids, _ = aruco.detectMarkers(image, self.aruco_dict)
-        rvec, tvec, _ = aruco.estimatePoseSingleMarkers(
-            corners, 0.1, self.cam_mtx, self.distor_factor
-        )
-
-        if ids is not None:
-            for i in range(0, ids.size):
-                aruco.drawAxis(
-                    image, self.cam_mtx, self.distor_factor, rvec[0], tvec[0], 0.06
-                )
-                cv2.putText(
-                    image,
-                    "%.1f cm -- %.0f degree"
-                    % ((tvec[0][0][2] * 100), (rvec[0][0][2] / math.pi * 180)),
-                    (0, 300),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1.0,
-                    (244, 244, 244),
-                )
-                # print((int)(tvec[0][0][2] * 1000))
-
         return image
 
 

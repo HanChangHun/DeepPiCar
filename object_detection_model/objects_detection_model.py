@@ -54,18 +54,6 @@ class ObjectDetectionModel(object):
         self.num_of_objects = 3
         logging.info("Initialize Edge TPU with model done.")
 
-        # initialize open cv for drawing boxes
-        self.font = cv2.FONT_HERSHEY_SIMPLEX
-        self.bottomLeftCornerOfText = (10, height - 10)
-        self.fontScale = 1
-        self.fontColor = (255, 255, 255)  # white
-        self.boxColor = (0, 0, 255)  # RED
-        self.boxLineWidth = 1
-        self.lineType = 2
-        self.annotate_text = ""
-        self.annotate_text_time = time.time()
-        self.time_to_show_prediction = 1.0  # ms
-
         self.traffic_objects = {0: Person()}
 
         self.durations = []
@@ -85,6 +73,25 @@ class ObjectDetectionModel(object):
         logging.debug("Processing objects END.............................")
 
         return final_frame
+
+    def detect_objects(self, frame):
+        logging.debug("Detecting objects...")
+
+        # call tpu for inference
+        frame_RGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        img_pil = Image.fromarray(frame_RGB)
+        _, scale = common.set_resized_input(
+            self.interpreter,
+            img_pil.size,
+            lambda size: img_pil.resize(size, Image.ANTIALIAS),
+        )
+        self.interpreter.invoke()
+
+        objects = detect.get_objects(
+            self.interpreter, score_threshold=self.min_confidence, image_scale=scale
+        )
+
+        return objects, cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 
     def control_car(self, objects):
         logging.debug("Control car...")
@@ -126,59 +133,6 @@ class ObjectDetectionModel(object):
         if self.car is not None:
             logging.debug("Actually setting car speed to %d" % speed)
             self.car.back_wheels.speed = speed
-
-    ############################
-    # Frame processing steps
-    ############################
-    def detect_objects(self, frame):
-        logging.debug("Detecting objects...")
-
-        # call tpu for inference
-        frame_RGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        img_pil = Image.fromarray(frame_RGB)
-        _, scale = common.set_resized_input(
-            self.interpreter,
-            img_pil.size,
-            lambda size: img_pil.resize(size, Image.ANTIALIAS),
-        )
-        self.interpreter.invoke()
-
-        objects = detect.get_objects(
-            self.interpreter, score_threshold=self.min_confidence, image_scale=scale
-        )
-
-        # scale_factor = self.width / img_pil.width
-        # draw_objects(ImageDraw.Draw(img_pil), objects, scale_factor, self.labels)
-
-        return objects, cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
-
-
-############################
-# Utility Functions
-############################
-
-
-def draw_objects(draw, objs, scale_factor, labels):
-    """Draws the bounding box and label for each object."""
-    COLORS = np.random.randint(100, 255, size=(len(labels), 3), dtype=np.uint8)
-    for obj in objs:
-        bbox = obj.bbox
-        color = tuple(int(c) for c in COLORS[obj.id])
-        draw.rectangle(
-            [
-                (bbox.xmin * scale_factor, bbox.ymin * scale_factor),
-                (bbox.xmax * scale_factor, bbox.ymax * scale_factor),
-            ],
-            outline=color,
-            width=3,
-        )
-        font = ImageFont.truetype("LiberationSans-Regular.ttf", size=15)
-        draw.text(
-            (bbox.xmin * scale_factor + 4, bbox.ymin * scale_factor + 4),
-            "%s\n%.2f" % (labels.get(obj.id, obj.id), obj.score),
-            fill=color,
-            font=font,
-        )
 
 
 if __name__ == "__main__":
