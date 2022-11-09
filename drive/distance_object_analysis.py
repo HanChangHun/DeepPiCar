@@ -102,11 +102,11 @@ class ObjectDetectionVisualizer:
             )
 
 
-def create_video_recorder(path, fourcc, cap):
+def create_video_recorder(path, fourcc, fps, cap):
     return cv2.VideoWriter(
         path,
         fourcc,
-        10.0,
+        fps,
         (int(cap.get(3)), int(cap.get(4))),
     )
 
@@ -139,7 +139,7 @@ def main():
 
     res_save_path = video_path.replace(".avi", "_vis.avi")
     fourcc = cv2.VideoWriter_fourcc(*"DIVX")
-    video_res = create_video_recorder(res_save_path, fourcc, cap)
+    video_res = create_video_recorder(res_save_path, fourcc, 10, cap)
 
     cnt = 0
     while cap.isOpened():
