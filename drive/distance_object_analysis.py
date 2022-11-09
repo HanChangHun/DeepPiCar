@@ -62,67 +62,51 @@ class ObjectDetectionVisualizer:
         self.width = width
         self.height = height
 
-        self.interpreter = make_interpreter(model_path)
-        self.interpreter.allocate_tensors()
-
         self.labels = read_label_file("object_detection_model/model/obj_det_labels.txt")
 
         self.min_confidence = 0.5
         self.num_of_objects = 3
+        self.cur_obj = []
+
+    def update_obj(self, objects):
+        self.cur_obj = objects
 
     def detect_objects(self, frame):
-        logging.debug("Detecting objects...")
-
-        # call tpu for inference
         frame_RGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img_pil = Image.fromarray(frame_RGB)
-        _, scale = common.set_resized_input(
-            self.interpreter,
-            img_pil.size,
-            lambda size: img_pil.resize(size, Image.Resampling.LANCZOS),
-        )
-        self.interpreter.invoke()
-
-        objects = detect.get_objects(
-            self.interpreter, score_threshold=self.min_confidence, image_scale=scale
-        )
 
         scale_factor = self.width / img_pil.width
-        draw_objects(ImageDraw.Draw(img_pil), objects, scale_factor, self.labels)
+        self.draw_objects(ImageDraw.Draw(img_pil), scale_factor, self.labels)
 
-        return objects, cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+        return cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 
-
-############################
-# Utility Functions
-############################
-def draw_objects(draw, objs, scale_factor, labels):
-    """Draws the bounding box and label for each object."""
-    COLORS = (0, 0, 255)
-    font = ImageFont.truetype("LiberationSans-Regular.ttf", size=15)
-    for obj in objs:
-        bbox = obj.bbox
-        draw.rectangle(
-            [
-                (bbox.xmin * scale_factor, bbox.ymin * scale_factor),
-                (bbox.xmax * scale_factor, bbox.ymax * scale_factor),
-            ],
-            outline=COLORS,
-            width=3,
-        )
-        draw.text(
-            (bbox.xmin * scale_factor + 4, bbox.ymin * scale_factor + 4),
-            "%s\n%.2f" % (labels.get(obj.id, obj.id), obj.score),
-            fill=COLORS,
-            font=font,
-        )
+    def draw_objects(self, draw, scale_factor, labels):
+        """Draws the bounding box and label for each object."""
+        COLORS = (0, 0, 255)
+        font = ImageFont.truetype("LiberationSans-Regular.ttf", size=15)
+        for obj in self.cur_obj:
+            bbox = obj[2]
+            draw.rectangle(
+                [
+                    (bbox[0] * scale_factor, bbox[1] * scale_factor),
+                    (bbox[2] * scale_factor, bbox[3] * scale_factor),
+                ],
+                outline=COLORS,
+                width=3,
+            )
+            draw.text(
+                (bbox[0] * scale_factor + 4, bbox[1] * scale_factor + 4),
+                "%s\n%.2f" % (labels.get(obj[0], obj[0]), obj[1]),
+                fill=COLORS,
+                font=font,
+            )
 
 
 def create_video_recorder(path, fourcc, cap):
     return cv2.VideoWriter(
         path,
         fourcc,
-        5.0,
+        10.0,
         (int(cap.get(3)), int(cap.get(4))),
     )
 
@@ -131,14 +115,21 @@ def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
+    parser.add_argument("-v", "--video", type=str, help="e.g. /path/to/video/video.mp4")
     parser.add_argument(
-        "-f", "--filepath", type=str, help="e.g. /path/to/video/video.mp4"
+        "-d", "--data", type=str, help="e.g. /path/to/video/objects.json"
     )
     args = parser.parse_args()
-    filepath = args.filepath
+    video_path = args.video
+    data_path = args.data
 
-    cap = cv2.VideoCapture(filepath)
-    cap.set(cv2.CAP_PROP_FPS, 5)
+    cap = cv2.VideoCapture(video_path)
+
+    with open(data_path) as f:
+        object_data = json.load(f)
+
+    obj_frames = [obj["frame_cnt"] for obj in object_data]
+    objects = [obj["objects"] for obj in object_data]
 
     obj_det_model_path = (
         "experiments/obj_det_sram/models/full/efficientdet-lite_edgetpu.tflite"
@@ -146,18 +137,25 @@ def main():
     obj_det_vis = ObjectDetectionVisualizer(obj_det_model_path, 640, 360)
     dist_estimator = DistanceEstimator(640, 360)
 
-    res_save_path = filepath.replace(".avi", "_vis.avi")
+    res_save_path = video_path.replace(".avi", "_vis.avi")
     fourcc = cv2.VideoWriter_fourcc(*"DIVX")
     video_res = create_video_recorder(res_save_path, fourcc, cap)
 
+    cnt = 0
     while cap.isOpened():
         ret, frame = cap.read()
         if ret:
-            _, frame = obj_det_vis.detect_objects(frame)
+            if cnt in obj_frames:
+                for obj in object_data:
+                    if obj["frame_cnt"] == cnt:
+                        obj_det_vis.update_obj(obj["objects"])
+
+            frame = obj_det_vis.detect_objects(frame)
             frame = dist_estimator.process_tag(frame)
             video_res.write(frame)
         else:
             break
+        cnt += 1
 
 
 if __name__ == "__main__":

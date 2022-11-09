@@ -17,11 +17,6 @@ from object_detection_model.traffic_objects import Person
 
 
 class ObjectDetectionModel(object):
-    """
-    This class 1) detects what objects (namely traffic signs and people) are on the road
-    and 2) controls the car navigation (speed/steering) accordingly
-    """
-
     def __init__(
         self,
         car=None,
@@ -31,28 +26,21 @@ class ObjectDetectionModel(object):
         width=320,
         height=180,
     ):
-        # model: This MUST be a tflite model that was specifically compiled for Edge TPU.
-        # https://coral.withgoogle.com/web-compiler/
         logging.info("Creating a ObjectsOnRoadProcessor...")
-        self.width = width
-        self.height = height
-
-        # initialize car
         self.car = car
         self.speed_limit = speed_limit
         self.speed = speed_limit
+        self.width = width
+        self.height = height
 
-        # initialize TensorFlow models
-        self.labels = read_label_file(label)
-
-        # initial edge TPU engine
         logging.info("Initialize Edge TPU with model %s..." % model_path)
         self.interpreter = make_interpreter(model_path)
         self.interpreter.allocate_tensors()
 
+        self.labels = read_label_file(label)
+
         self.min_confidence = 0.5
         self.num_of_objects = 3
-        logging.info("Initialize Edge TPU with model done.")
 
         self.traffic_objects = {0: Person()}
 
@@ -60,19 +48,18 @@ class ObjectDetectionModel(object):
 
     def process_objects_on_road(self, frame):
         # Main entry point of the Road Object Handler
-        start_time = time.perf_counter()
         logging.debug("Processing objects.................................")
 
+        start_time = time.perf_counter()
         objects, final_frame = self.detect_objects(frame)
-
         duration = (time.perf_counter() - start_time) * 1000
+
+        logging.debug(f"Processing objects END. Duration: {round(duration, 2)}....")
         self.durations.append(duration)
 
         self.control_car(objects)
 
-        logging.debug("Processing objects END.............................")
-
-        return final_frame
+        return objects, final_frame
 
     def detect_objects(self, frame):
         logging.debug("Detecting objects...")
@@ -109,9 +96,9 @@ class ObjectDetectionModel(object):
                 )
             self.resume_driving(car_state)
 
-        # if len(objects) == 0:
-        #     car_state["speed"] = self.speed_limit
-        #     self.resume_driving(car_state)
+        if len(objects) == 0:
+            car_state["speed"] = self.speed_limit
+            self.resume_driving(car_state)
 
     def resume_driving(self, car_state):
         old_speed = self.speed

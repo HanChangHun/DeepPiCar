@@ -16,6 +16,7 @@ class VideoRecoder:
 
         self.video = self.create_video_recorder()
 
+        self.frame_cnt = 0
         self.stopped = False
 
     def create_video_recorder(self):
@@ -42,6 +43,7 @@ class VideoRecoder:
             # otherwise, read the next frame from the stream
             (self.grabbed, self.frame) = self.camera.read()
             self.video.write(self.frame)
+            self.frame_cnt += 1
 
     def release(self):
         # indicate that the thread should be stopped

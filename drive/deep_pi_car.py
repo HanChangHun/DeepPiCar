@@ -1,44 +1,39 @@
-import math
 import sys
+import time
 import json
 import logging
 import datetime
 import argparse
 from pathlib import Path
-import time
 
+import cv2
 import picar
 
-import numpy as np
-import cv2
-import cv2.aruco as aruco
-
-from lane_navigation_model.lane_navigation_model_edgetpu import (
-    LaneNavigationModelEdgeTPU,
-)
 from drive.utils import print_statistics, show_image
 from drive.webcam_video_stream import WebcamVideoStream
 from drive.video_recoder import VideoRecoder
-
 
 from object_detection_model.objects_detection_model import ObjectDetectionModel
 
 
 class DeepPiCar:
     def __init__(
-        self, initial_speed=0, show_image=False, video_save_dir=Path("drive/data")
+        self, speed_limit=0, show_image=False, video_save_dir=Path("drive/data")
     ):
         """Init camera and wheels"""
         logging.info("Creating a DeepPiCar...")
+        self.speed_limit = speed_limit
         self.show_image = show_image
-
         picar.setup()
-        self.initial_speed = initial_speed
 
-        # logging.debug("Set up camera")
+        logging.debug("Set up camera")
         self.screen_width = 854
         self.screen_height = 480
         self.fps = 10.0
+
+        date_str = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
+        self.out_dir = Path(video_save_dir / f"{date_str}")
+        self.out_dir.mkdir(exist_ok=True, parents=True)
 
         self.camera = WebcamVideoStream(
             -1, self.screen_width, self.screen_height, self.fps
@@ -50,59 +45,32 @@ class DeepPiCar:
 
         logging.debug("Set up front wheels")
         self.front_wheels = picar.front_wheels.Front_Wheels()
-        self.front_wheels.turning_offset = 0  # calibrate servo to center
+        self.front_wheels.turning_offset = 5  # calibrate servo to center
         self.front_wheels.turn(
             90
         )  # Steering Range is 45 (left) - 90 (center) - 135 (right)
 
+        logging.debug("Set up object detection model")
         self.obj_det_model_path = (
             "experiments/obj_det_sram/models/full/efficientdet-lite_edgetpu.tflite"
         )
-        logging.debug("Set up object detection model")
         self.obj_det_model = ObjectDetectionModel(
             self,
             model_path=self.obj_det_model_path,
-            speed_limit=self.initial_speed,
+            speed_limit=self.speed_limit,
             width=self.screen_width,
             height=self.screen_height,
         )
         self.warmup_obj_det()
 
         logging.debug("Set up video stream")
-        date_str = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
-        self.out_dir = Path(video_save_dir / f"{date_str}")
-        self.out_dir.mkdir(exist_ok=True, parents=True)
-        self.video_orig = VideoRecoder(
+        self.video_recoder = VideoRecoder(
             self.camera, self.out_dir / "video.avi", self.fps
         ).start()
 
-        # self.fourcc = cv2.VideoWriter_fourcc(*"DIVX")
-        # self.video_orig = self.create_video_recorder(
-        #     str(self.video_save_dir / "car_video.avi")
-        # )
-        # self.video_lane = self.create_video_recorder(
-        #     str(self.video_save_dir / "car_video_lane.avi")
-        # )
-        # self.video_objs = self.create_video_recorder(
-        #     str(self.video_save_dir / "car_video_objs.avi")
-        # )
-        # self.video_tag = self.create_video_recorder(
-        #     str(self.video_save_dir / "car_video_tag.avi")
-        # )
-
         logging.info("Created a DeepPiCar")
 
-    def init_cam(self):
-        for _ in range(30):
-            self.camera.read()
-
-    def create_video_recorder(self, path):
-        return cv2.VideoWriter(
-            path,
-            self.fourcc,
-            self.fps,
-            (int(self.camera.get(3)), int(self.camera.get(4))),
-        )
+        self.obj_results = []
 
     def warmup_obj_det(self):
         for _ in range(30):
@@ -122,12 +90,10 @@ class DeepPiCar:
         logging.info("Stopping the car, resetting hardware.")
         self.back_wheels.speed = 0
         self.front_wheels.turn(90)
-        self.video_orig.release()
+        self.video_recoder.release()
         self.camera.release()
-        # self.camera.release()
-        # self.video_lane.release()
-        # self.video_objs.release()
-        # self.video_tag.release()
+        with open(self.out_dir / "objects.json", "w") as f:
+            json.dump(self.obj_results, f, indent=4)
         cv2.destroyAllWindows()
 
     def drive(self, speed=0):
@@ -136,23 +102,13 @@ class DeepPiCar:
 
         while self.camera.isOpened():
             time.sleep(1e-9)
-            _, image_org = self.camera.read()
-            show_image("orig", image_org, self.show_image)
+            _, frame = self.camera.read()
+            show_image("orig", frame, self.show_image)
 
-            # image_objs = image_org.copy()
-            image_objs = self.obj_det_model.process_objects_on_road(image_org)
-            # self.video_objs.write(image_objs)
-            show_image("Detected Objects", image_objs, self.show_image)
-
-            # image_lane = image_org.copy()
-            # image_lane = self.follow_lane(image_lane)
-            # self.video_lane.write(image_lane)
-            # show_image("Lane Lines", image_lane, self.show_image)
-
-            # image_tag = image_org.copy()
-            # image_tag = self.process_tag(image_tag)
-            # self.video_tag.write(image_tag)
-            # show_image("April Tag", image_tag, self.show_image)
+            objects, frame_obj = self.obj_det_model.process_objects_on_road(frame)
+            obj_result = {"frame_cnt": self.video_recoder.frame_cnt, "objects": objects}
+            self.obj_results.append(obj_result)
+            show_image("Detected Objects", frame_obj, self.show_image)
 
     def follow_lane(self, image):
         image = self.lane_follower.follow_lane(image)
@@ -179,7 +135,7 @@ def main():
     speed = args.speed
     show_image = args.show_image
 
-    with DeepPiCar(initial_speed=speed, show_image=show_image) as car:
+    with DeepPiCar(speed_limit=speed, show_image=show_image) as car:
         try:
             car.drive(speed)
         except KeyboardInterrupt:
