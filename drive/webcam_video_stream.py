@@ -6,16 +6,16 @@ import cv2
 
 
 class WebcamVideoStream:
-    def __init__(self, src=-1, screen_width=320, screen_height=180, read_interval=0.05):
+    def __init__(self, src=-1, screen_width=320, screen_height=180, fps=10):
         # initialize the video camera stream and read the first frame
         # from the stream
         self.screen_width = screen_width
         self.screen_height = screen_height
-        self.read_interval = read_interval
+        self.fps = fps
 
         self.stream = cv2.VideoCapture(src)
         self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))
-        self.stream.set(cv2.CAP_PROP_FPS, 5)
+        self.stream.set(cv2.CAP_PROP_FPS, fps)
         self.stream.set(3, self.screen_width)
         self.stream.set(4, self.screen_height)
 
@@ -50,6 +50,6 @@ class WebcamVideoStream:
         # return the frame most recently read
         return self.grabbed, self.frame
 
-    def stop(self):
+    def release(self):
         # indicate that the thread should be stopped
         self.stopped = True

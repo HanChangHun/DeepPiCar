@@ -18,6 +18,7 @@ from lane_navigation_model.lane_navigation_model_edgetpu import (
 )
 from drive.utils import print_statistics, show_image
 from drive.webcam_video_stream import WebcamVideoStream
+from drive.video_recoder import VideoRecoder
 
 
 from object_detection_model.objects_detection_model import ObjectDetectionModel
@@ -35,17 +36,12 @@ class DeepPiCar:
         self.initial_speed = initial_speed
 
         # logging.debug("Set up camera")
-        self.__SCREEN_WIDTH = 640
-        self.__SCREEN_HEIGHT = 360
+        self.screen_width = 854
+        self.screen_height = 480
+        self.fps = 10.0
 
-        # self.camera = cv2.VideoCapture(-1)
-        # self.camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))
-        # self.camera.set(cv2.CAP_PROP_FPS, 5)
-        # self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, self.__SCREEN_WIDTH)
-        # self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, self.__SCREEN_HEIGHT)
-        # self.init_cam()
         self.camera = WebcamVideoStream(
-            -1, self.__SCREEN_WIDTH, self.__SCREEN_HEIGHT, 0.05
+            -1, self.screen_width, self.screen_height, self.fps
         ).start()
 
         logging.debug("Set up back wheels")
@@ -59,13 +55,6 @@ class DeepPiCar:
             90
         )  # Steering Range is 45 (left) - 90 (center) - 135 (right)
 
-        # self.lane_nav_model_path = (
-        #     "co_compiled_model/lane_navigation_w_pretrain_final_edgetpu.tflite"
-        # )
-        # self.lane_follower = LaneNavigationModelEdgeTPU(
-        #     self, model_path=lane_nav_model_path
-        # )
-
         self.obj_det_model_path = (
             "experiments/obj_det_sram/models/full/efficientdet-lite_edgetpu.tflite"
         )
@@ -74,20 +63,23 @@ class DeepPiCar:
             self,
             model_path=self.obj_det_model_path,
             speed_limit=self.initial_speed,
-            width=self.__SCREEN_WIDTH,
-            height=self.__SCREEN_HEIGHT,
+            width=self.screen_width,
+            height=self.screen_height,
         )
         self.warmup_obj_det()
 
         logging.debug("Set up video stream")
         date_str = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
-        self.video_save_dir = Path(video_save_dir / f"{date_str}")
-        self.video_save_dir.mkdir(exist_ok=True, parents=True)
+        self.out_dir = Path(video_save_dir / f"{date_str}")
+        self.out_dir.mkdir(exist_ok=True, parents=True)
+        self.video_orig = VideoRecoder(
+            self.camera, self.out_dir / "video.avi", self.fps
+        ).start()
 
-        self.fourcc = cv2.VideoWriter_fourcc(*"DIVX")
-        self.video_orig = self.create_video_recorder(
-            str(self.video_save_dir / "car_video.avi")
-        )
+        # self.fourcc = cv2.VideoWriter_fourcc(*"DIVX")
+        # self.video_orig = self.create_video_recorder(
+        #     str(self.video_save_dir / "car_video.avi")
+        # )
         # self.video_lane = self.create_video_recorder(
         #     str(self.video_save_dir / "car_video_lane.avi")
         # )
@@ -101,14 +93,14 @@ class DeepPiCar:
         logging.info("Created a DeepPiCar")
 
     def init_cam(self):
-        for _ in range(50):
+        for _ in range(30):
             self.camera.read()
 
     def create_video_recorder(self, path):
         return cv2.VideoWriter(
             path,
             self.fourcc,
-            5.0,
+            self.fps,
             (int(self.camera.get(3)), int(self.camera.get(4))),
         )
 
@@ -131,8 +123,7 @@ class DeepPiCar:
         self.back_wheels.speed = 0
         self.front_wheels.turn(90)
         self.video_orig.release()
-        self.camera.stop()
-        self.camera.stream.release()
+        self.camera.release()
         # self.camera.release()
         # self.video_lane.release()
         # self.video_objs.release()
@@ -143,15 +134,10 @@ class DeepPiCar:
         logging.info("Starting to drive at speed %s..." % speed)
         self.back_wheels.speed = speed
 
-        frame_cnt = 0
         while self.camera.isOpened():
             time.sleep(1e-9)
             _, image_org = self.camera.read()
-            self.video_orig.write(image_org)
             show_image("orig", image_org, self.show_image)
-
-            # frame_cnt += 1
-            # cv2.imwrite(str(self.video_save_dir / f"frame_{frame_cnt}.png"), image_org)
 
             # image_objs = image_org.copy()
             image_objs = self.obj_det_model.process_objects_on_road(image_org)
