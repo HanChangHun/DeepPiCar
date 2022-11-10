@@ -13,10 +13,7 @@ from pycoral.adapters.detect import BBox
 from pycoral.utils.dataset import read_label_file
 from pycoral.utils.edgetpu import make_interpreter
 
-labels = read_label_file(
-    "models/object_detection/data/model_result/road_sign_labels.txt"
-)
-input_file = "models/object_detection/data/images/train/2019-04-16-095702.jpg"
+labels = read_label_file("data/object_detection/labels.txt")
 
 
 class ModelRunner:
@@ -36,15 +33,6 @@ class ModelRunner:
         self.size = common.input_size(self.interpreters[0])
         _dtype = self.interpreters[0].get_input_details()[0]["dtype"]
 
-        self.image = Image.open(input_file)
-        self.preloaded_img1 = self.image.convert("RGB").resize(
-            self.size, Image.ANTIALIAS
-        )
-        self.preloaded_img2 = np.asarray(
-            self.preloaded_img1,
-            dtype=_dtype,
-        )[np.newaxis, :]
-
     def make_interpreters(self):
         for model_path in self.model_paths:
             self.interpreters.append(make_interpreter(str(model_path)))
@@ -53,15 +41,17 @@ class ModelRunner:
         for interpreter in self.interpreters:
             interpreter.allocate_tensors()
 
-    def invoke_all(self, task=None):
+    def invoke_all(self, image, task=None):
+        # this function will be executed for warmup interpreter
         self.cur_idx = 0
-        for _ in range(len(self.interpreters)):
-            self.invoke_and_next(task=task)
 
-    def invoke_and_next(self, task=None):
+        for _ in range(len(self.interpreters)):
+            self.invoke_and_next(image, task=task)
+
+    def invoke_and_next(self, image, task=None):
         assert self.cur_idx < len(self.interpreters)
 
-        self.invoke_idx(self.cur_idx, task=task)
+        self.invoke_idx(self.cur_idx, image, task=task)
 
         if self.cur_idx < len(self.interpreters) - 1:
             self.cur_idx += 1
@@ -74,31 +64,28 @@ class ModelRunner:
         else:
             raise Exception("wired index...")
 
-    def invoke_idx(self, idx, task=None, profile=False):
+    def invoke_idx(self, idx, image, task=None, profile=False):
         interpreter = self.interpreters[idx]
 
-        h2d_dur = self.set_input(idx, task=task, profile=profile)
+        if image:
+            h2d_dur = self.set_input(idx, image, task=task, profile=profile)
+
         exec_dur = self.invoke(interpreter, profile=profile)
         d2h_dur = self.update_intermediate(interpreter, profile=profile)
 
         if profile:
             return [h2d_dur, exec_dur, d2h_dur]
 
-    def set_first_input_orginal(self, input_file):
-        # Deprecated
-        assert self.intermediate == None
-        common.set_input(self.interpreters[0], self.preloaded_img1)
-
-    def set_input(self, idx, task=None, profile=False):
+    def set_input(self, idx, image, task=None, profile=False):
         if idx == 0:
-            duration = self.set_first_input(task=task, profile=profile)
+            duration = self.set_first_input(image, task=task, profile=profile)
         else:
             duration = self.set_general_input(self.interpreters[idx], profile=profile)
 
         if profile:
             return duration
 
-    def set_first_input(self, task=None, profile=False):
+    def set_first_input(self, image, task=None, profile=False):
         if profile:
             st = time.perf_counter()
 
@@ -107,13 +94,13 @@ class ModelRunner:
             for input_detail in input_details:
                 if input_detail["name"] == "images":
                     tensor_index = input_detail["index"]
-                    self.interpreters[0].set_tensor(tensor_index, self.preloaded_img2)
+                    self.interpreters[0].set_tensor(tensor_index, image)
 
         elif task == "detection":
             self.set_resized_input(
                 self.interpreters[0],
-                self.image.size,
-                lambda size: self.image.resize(size, Image.ANTIALIAS),
+                image.size,
+                lambda size: image.resize(size, Image.ANTIALIAS),
             )
 
         if profile:
@@ -173,16 +160,16 @@ class ModelRunner:
             duration = (time.perf_counter() - st) * 1000
             return duration
 
-    def get_result(self, top_n=1, detect=False, image_scale=(1.0, 1.0)):
+    def get_result(self, task=None, top_n=1, image_scale=(1.0, 1.0)):
         out = list(self.intermediate.items())
         # assert len(out) == 1
 
         _, values = out[0]
         scores = self.scale * (values[0].astype(np.int64) - self.zero_point)
-        if detect == False:
+        if task == None:
             classes = classify.get_classes_from_scores(scores, top_n, 0.0)
             result = {labels.get(c.id, c.id): c.score for c in classes}
-        else:
+        elif task == "detection":
             result = self.get_objects(image_scale=image_scale)
 
         self.intermediate = dict()

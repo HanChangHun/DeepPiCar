@@ -25,7 +25,7 @@ class DistanceEstimator:
         self.width = width
         self.height = height
 
-        with open("calibrationValues0.json") as f:
+        with open("distance_estimation/calibrationValues0.json") as f:
             cal_vals = json.load(f)
         self.cam_mtx = np.array(cal_vals["camera_matrix"])
         self.distor_factor = np.array(cal_vals["dist_coeff"])

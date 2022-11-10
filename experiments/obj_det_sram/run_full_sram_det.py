@@ -35,9 +35,9 @@ def e2e_inference(interpreter, camera, image_path):
 
     st1 = int(time.perf_counter() * 1000)
 
-    image = cv2.imread(image_path)
-    # _, frame = camera.read()
-    # image = frame
+    # image = cv2.imread(image_path)
+    _, frame = camera.read()
+    image = frame
 
     st2 = int(time.perf_counter() * 1000)
 
@@ -66,12 +66,12 @@ def e2e_inference(interpreter, camera, image_path):
 
 
 if __name__ == "__main__":
-    __SCREEN_WIDTH = 320
-    __SCREEN_HEIGHT = 180
+    __SCREEN_WIDTH = 854
+    __SCREEN_HEIGHT = 480
 
     camera = cv2.VideoCapture(-1)
     camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))
-    camera.set(cv2.CAP_PROP_FPS, 5)
+    camera.set(cv2.CAP_PROP_FPS, 10.0)
     camera.set(3, __SCREEN_WIDTH)
     camera.set(4, __SCREEN_HEIGHT)
 
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     interpreter.invoke()
 
     time_spans = []
-    for _ in range(25):
+    for _ in range(50):
         st = time.perf_counter()
         interpreter.invoke()
         dur = round((time.perf_counter() - st) * 1000, 2)
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     print(f"Std inference time: {np.std(time_spans)} ms\n")
 
     time_spans = []
-    for _ in range(25):
+    for _ in range(50):
         st = time.perf_counter()
         e2e_inference(interpreter, camera, image_path)
         time_spans.append((time.perf_counter() - st) * 1000)

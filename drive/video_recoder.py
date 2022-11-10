@@ -6,9 +6,9 @@ import cv2
 
 
 class VideoRecoder:
-    def __init__(self, camera, path, fps=10):
+    def __init__(self, camera, out_path, fps=10):
         self.camera = camera
-        self.path = str(path)
+        self.out_path = str(out_path)
         # initialize the video camera stream and read the first frame
         # from the stream
         self.fps = fps
@@ -21,11 +21,12 @@ class VideoRecoder:
 
     def create_video_recorder(self):
         return cv2.VideoWriter(
-            self.path,
+            self.out_path,
             self.fourcc,
             self.fps,
             (int(self.camera.get(3)), int(self.camera.get(4))),
         )
+
 
     def start(self):
         # start the thread to read frames from the video stream
@@ -44,7 +45,6 @@ class VideoRecoder:
             (self.grabbed, self.frame) = self.camera.read()
             self.video.write(self.frame)
             self.frame_cnt += 1
-
     def release(self):
         # indicate that the thread should be stopped
         self.stopped = True

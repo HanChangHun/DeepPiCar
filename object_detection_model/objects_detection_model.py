@@ -1,17 +1,19 @@
 import cv2
-import logging
-import datetime
 import time
-from PIL import Image
-from PIL import ImageDraw
-from PIL import ImageFont
+import json
+import logging
+from threading import Thread
+
 import numpy as np
+from PIL import Image
 
 
 from pycoral.adapters import common
 from pycoral.adapters import detect
 from pycoral.utils.edgetpu import make_interpreter
 from pycoral.utils.dataset import read_label_file
+
+from scheduler.task_client import TaskClient
 
 from object_detection_model.traffic_objects import Person
 
@@ -23,35 +25,64 @@ class ObjectDetectionModel(object):
         speed_limit=40,
         model_path="experiments/obj_det_sram/models/full/efficientdet-lite_edgetpu.tflite",
         label="object_detection_model/model/obj_det_labels.txt",
-        width=320,
-        height=180,
     ):
         logging.info("Creating a ObjectsOnRoadProcessor...")
         self.car = car
         self.speed_limit = speed_limit
         self.speed = speed_limit
-        self.width = width
-        self.height = height
+
+        self.period = 0.2
+
+        with open("scheduler/task_set/test1.json") as f:
+            task_info = json.load(f)
+        self.task_client = TaskClient(task_info)
 
         logging.info("Initialize Edge TPU with model %s..." % model_path)
-        self.interpreter = make_interpreter(model_path)
-        self.interpreter.allocate_tensors()
-
-        self.labels = read_label_file(label)
-
-        self.min_confidence = 0.5
-        self.num_of_objects = 3
+        # self.interpreter = make_interpreter(model_path)
+        # self.interpreter.allocate_tensors()
+        # self.labels = read_label_file(label)
 
         self.traffic_objects = {0: Person()}
+        self.min_confidence = 0.5
+
+        self.objects = None
+
+        self.stopped = False
 
         self.durations = []
+
+    def release(self):
+        self.stopped = True
+
+    def start(self):
+        Thread(target=self.update, args=()).start()
+        return self
+
+    def update(self):
+        start_time = time.perf_counter()
+        _iter = 0
+
+        while True:
+            time.sleep(1e-9)
+            if self.stopped:
+                return
+
+            if time.perf_counter() - start_time > self.period * _iter:
+                logging.info(f"iteration {_iter}")
+                _, frame = self.car.camera.read()
+                self.objects, self.final_frame = self.process_objects_on_road(frame)
+
+                _iter += 1
+
+    def read(self):
+        return self.objects
 
     def process_objects_on_road(self, frame):
         # Main entry point of the Road Object Handler
         logging.debug("Processing objects.................................")
 
         start_time = time.perf_counter()
-        objects, final_frame = self.detect_objects(frame)
+        objects = self.detect_objects(frame)
         duration = (time.perf_counter() - start_time) * 1000
 
         logging.debug(f"Processing objects END. Duration: {round(duration, 2)}....")
@@ -59,7 +90,7 @@ class ObjectDetectionModel(object):
 
         self.control_car(objects)
 
-        return objects, final_frame
+        return objects
 
     def detect_objects(self, frame):
         logging.debug("Detecting objects...")
@@ -67,16 +98,17 @@ class ObjectDetectionModel(object):
         # call tpu for inference
         frame_RGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img_pil = Image.fromarray(frame_RGB)
-        _, scale = common.set_resized_input(
-            self.interpreter,
-            img_pil.size,
-            lambda size: img_pil.resize(size, Image.ANTIALIAS),
-        )
-        self.interpreter.invoke()
+        # _, scale = common.set_resized_input(
+        #     self.interpreter,
+        #     img_pil.size,
+        #     lambda size: img_pil.resize(size, Image.ANTIALIAS),
+        # )
+        # self.interpreter.invoke()
+        # objects = detect.get_objects(
+        #     self.interpreter, score_threshold=self.min_confidence, image_scale=scale
+        # )
 
-        objects = detect.get_objects(
-            self.interpreter, score_threshold=self.min_confidence, image_scale=scale
-        )
+        objects = self.task_client.recieve_result()
 
         return objects, cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 
@@ -88,7 +120,7 @@ class ObjectDetectionModel(object):
         for obj in objects:
             obj_label = self.labels[obj.id]
             processor = self.traffic_objects[obj.id]
-            if processor.is_close_by(obj, self.height, min_height_pct=0):
+            if processor.is_close_by(obj):
                 processor.set_car_state(car_state)
             else:
                 logging.debug(
@@ -96,9 +128,9 @@ class ObjectDetectionModel(object):
                 )
             self.resume_driving(car_state)
 
-        if len(objects) == 0:
-            car_state["speed"] = self.speed_limit
-            self.resume_driving(car_state)
+        # if len(objects) == 0:
+        #     car_state["speed"] = self.speed_limit
+        #     self.resume_driving(car_state)
 
     def resume_driving(self, car_state):
         old_speed = self.speed

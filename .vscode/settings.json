@@ -1,4 +1,13 @@
 {
     "jupyter.notebookFileRoot": "${workspaceFolder}",
-    "notebook.output.textLineLimit": 500
+    "notebook.output.textLineLimit": 500,
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        ".",
+        "-p",
+        "*_test.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true
 }

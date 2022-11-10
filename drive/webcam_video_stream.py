@@ -30,6 +30,10 @@ class WebcamVideoStream:
     def isOpened(self):
         return self.stream.isOpened()
 
+    def release(self):
+        # indicate that the thread should be stopped
+        self.stopped = True
+
     def start(self):
         # start the thread to read frames from the video stream
         Thread(target=self.update, args=()).start()
@@ -49,7 +53,3 @@ class WebcamVideoStream:
     def read(self):
         # return the frame most recently read
         return self.grabbed, self.frame
-
-    def release(self):
-        # indicate that the thread should be stopped
-        self.stopped = True
