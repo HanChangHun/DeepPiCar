@@ -12,6 +12,7 @@ import picar
 from drive.utils import print_statistics, show_image
 from drive.webcam_video_stream import WebcamVideoStream
 from drive.video_recoder import VideoRecoder
+from scheduler.edgetpu_scheduler import EdgeTPUScheduler
 
 from object_detection_model.objects_detection_model import ObjectDetectionModel
 
@@ -31,12 +32,16 @@ class DeepPiCar:
         self.screen_height = 480
         self.fps = 10.0
 
+        logging.debug("Set up video stream and recoder")
         date_str = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
         self.out_dir = Path(video_save_dir / f"{date_str}")
         self.out_dir.mkdir(exist_ok=True, parents=True)
 
         self.camera = WebcamVideoStream(
             -1, self.screen_width, self.screen_height, self.fps
+        ).start()
+        self.video_recoder = VideoRecoder(
+            self.camera, self.out_dir / "video.avi", self.fps
         ).start()
 
         logging.debug("Set up back wheels")
@@ -50,31 +55,19 @@ class DeepPiCar:
             90
         )  # Steering Range is 45 (left) - 90 (center) - 135 (right)
 
+        self.edgetpu_scheduler = EdgeTPUScheduler()
+
         logging.debug("Set up object detection model")
         self.obj_det_model_path = (
             "experiments/obj_det_sram/models/full/efficientdet-lite_edgetpu.tflite"
         )
         self.obj_det_model = ObjectDetectionModel(
-            self,
-            model_path=self.obj_det_model_path,
-            speed_limit=self.speed_limit,
-            width=self.screen_width,
-            height=self.screen_height,
-        )
-        self.warmup_obj_det()
-
-        logging.debug("Set up video stream")
-        self.video_recoder = VideoRecoder(
-            self.camera, self.out_dir / "video.avi", self.fps
+            self, model_path=self.obj_det_model_path, speed_limit=self.speed_limit
         ).start()
 
         logging.info("Created a DeepPiCar")
 
         self.obj_results = []
-
-    def warmup_obj_det(self):
-        for _ in range(30):
-            self.obj_det_model.interpreter.invoke()
 
     def __enter__(self):
         return self
@@ -90,6 +83,7 @@ class DeepPiCar:
         logging.info("Stopping the car, resetting hardware.")
         self.back_wheels.speed = 0
         self.front_wheels.turn(90)
+        self.obj_det_model.release()
         self.video_recoder.release()
         self.camera.release()
         with open(self.out_dir / "objects.json", "w") as f:
@@ -102,17 +96,13 @@ class DeepPiCar:
 
         while self.camera.isOpened():
             time.sleep(1e-9)
-            _, frame = self.camera.read()
-            show_image("orig", frame, self.show_image)
+            # _, frame = self.camera.read()
+            # show_image("orig", frame, self.show_image)
 
-            objects, frame_obj = self.obj_det_model.process_objects_on_road(frame)
+            objects, frame_obj = self.obj_det_model.read()
             obj_result = {"frame_cnt": self.video_recoder.frame_cnt, "objects": objects}
             self.obj_results.append(obj_result)
-            show_image("Detected Objects", frame_obj, self.show_image)
-
-    def follow_lane(self, image):
-        image = self.lane_follower.follow_lane(image)
-        return image
+            # show_image("Detected Objects", frame_obj, self.show_image)
 
 
 def main():
