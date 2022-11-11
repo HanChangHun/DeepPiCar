@@ -13,7 +13,7 @@ from pycoral.adapters import detect
 from pycoral.utils.edgetpu import make_interpreter
 from pycoral.utils.dataset import read_label_file
 
-from scheduler.task_client import TaskClient
+from scheduler.edgetpu_scheduler import EdgeTPUScheduler
 
 from object_detection_model.traffic_objects import Person
 
@@ -21,112 +21,108 @@ from object_detection_model.traffic_objects import Person
 class ObjectDetectionModel(object):
     def __init__(
         self,
-        car=None,
+        car,
+        task_name,
+        period,
+        segment_paths,
+        scheduler: EdgeTPUScheduler,
         speed_limit=40,
-        model_path="experiments/obj_det_sram/models/full/efficientdet-lite_edgetpu.tflite",
         label="object_detection_model/model/obj_det_labels.txt",
     ):
-        logging.info("Creating a ObjectsOnRoadProcessor...")
+        logging.info("Creating a ObjectDetectionModel...")
         self.car = car
+        self.task_name = task_name
+        self.period = period
+        self.segment_paths = segment_paths
+        self.scheduler = scheduler
         self.speed_limit = speed_limit
         self.speed = speed_limit
+        self.lock = scheduler.lock
 
-        self.period = 0.2
-
-        with open("scheduler/task_set/test1.json") as f:
-            task_info = json.load(f)
-        self.task_client = TaskClient(task_info)
-
-        logging.info("Initialize Edge TPU with model %s..." % model_path)
-        # self.interpreter = make_interpreter(model_path)
-        # self.interpreter.allocate_tensors()
-        # self.labels = read_label_file(label)
+        self.labels = read_label_file("data/object_detection/labels.txt")
 
         self.traffic_objects = {0: Person()}
         self.min_confidence = 0.5
 
         self.objects = None
-
         self.stopped = False
 
-        self.durations = []
-
-    def release(self):
-        self.stopped = True
-
     def start(self):
-        Thread(target=self.update, args=()).start()
+        self.register_model()
+        self.send_request()
+        self.recieve_result()
         return self
-
-    def update(self):
-        start_time = time.perf_counter()
-        _iter = 0
-
-        while True:
-            time.sleep(1e-9)
-            if self.stopped:
-                return
-
-            if time.perf_counter() - start_time > self.period * _iter:
-                logging.info(f"iteration {_iter}")
-                _, frame = self.car.camera.read()
-                self.objects, self.final_frame = self.process_objects_on_road(frame)
-
-                _iter += 1
 
     def read(self):
         return self.objects
 
-    def process_objects_on_road(self, frame):
-        # Main entry point of the Road Object Handler
-        logging.debug("Processing objects.................................")
+    def release(self):
+        self.stopped = True
+
+    def register_model(self):
+        self.scheduler.add_model_runner(
+            self.task_name, "detection", self.period, self.segment_paths
+        )
+
+    def send_request(self):
+        def send_request_loop(start_time):
+            _iter = 0
+            while True:
+                time.sleep(1e-9)
+                if self.stopped:
+                    return
+
+                if time.perf_counter() - start_time > self.period * _iter:
+                    _, frame = self.car.camera.read()
+                    self.lock.acquire()
+                    self.scheduler.waiting_queue.append(
+                        {
+                            "task_name": self.task_name,
+                            "task": "detection",
+                            "request_time": time.perf_counter(),
+                            "data": frame,
+                        }
+                    )
+                    self.lock.release()
+                    _iter += 1
 
         start_time = time.perf_counter()
-        objects = self.detect_objects(frame)
-        duration = (time.perf_counter() - start_time) * 1000
+        send_request_th = Thread(target=send_request_loop, args=(start_time,))
+        send_request_th.start()
 
-        logging.debug(f"Processing objects END. Duration: {round(duration, 2)}....")
-        self.durations.append(duration)
+    def recieve_result(self):
+        def recieve_result_loop():
+            while True:
+                time.sleep(1e-4)
+                if self.stopped:
+                    return
 
-        self.control_car(objects)
+                self.objects = self.scheduler.task_results[self.task_name]
+                self.control_car(self.objects)
 
-        return objects
-
-    def detect_objects(self, frame):
-        logging.debug("Detecting objects...")
-
-        # call tpu for inference
-        frame_RGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        img_pil = Image.fromarray(frame_RGB)
-        # _, scale = common.set_resized_input(
-        #     self.interpreter,
-        #     img_pil.size,
-        #     lambda size: img_pil.resize(size, Image.ANTIALIAS),
-        # )
-        # self.interpreter.invoke()
-        # objects = detect.get_objects(
-        #     self.interpreter, score_threshold=self.min_confidence, image_scale=scale
-        # )
-
-        objects = self.task_client.recieve_result()
-
-        return objects, cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+        send_request_th = Thread(target=recieve_result_loop)
+        send_request_th.start()
 
     def control_car(self, objects):
         logging.debug("Control car...")
-        car_state = {"speed": self.speed_limit, "speed_limit": self.speed_limit}
+        car_state = {
+            "speed": self.speed_limit,
+            "speed_limit": self.speed_limit,
+        }
 
-        logging.info(f"{len(objects)} objects are found")
+        logging.debug(f"{len(objects)} objects are found")
         for obj in objects:
-            obj_label = self.labels[obj.id]
-            processor = self.traffic_objects[obj.id]
-            if processor.is_close_by(obj):
-                processor.set_car_state(car_state)
-            else:
-                logging.debug(
-                    "[%s] object detected, but it is too far, ignoring. " % obj_label
-                )
-            self.resume_driving(car_state)
+            if obj != []:
+                obj_label = self.labels[obj.id]
+                processor = self.traffic_objects[obj.id]
+                if processor.is_close_by(obj):
+                    processor.set_car_state(car_state)
+                else:
+                    logging.debug(
+                        "[%s] object detected, but it is too far, ignoring. "
+                        % obj_label
+                    )
+                self.resume_driving(car_state)
 
         # if len(objects) == 0:
         #     car_state["speed"] = self.speed_limit
@@ -141,7 +137,9 @@ class ObjectDetectionModel(object):
             self.set_speed(0)
         else:
             self.set_speed(self.speed_limit)
-        logging.debug("Current Speed = %d, New Speed = %d" % (old_speed, self.speed))
+        logging.debug(
+            "Current Speed = %d, New Speed = %d" % (old_speed, self.speed)
+        )
 
         if self.speed == 0:
             logging.debug("full stop for 1 seconds")
@@ -152,6 +150,59 @@ class ObjectDetectionModel(object):
         if self.car is not None:
             logging.debug("Actually setting car speed to %d" % speed)
             self.car.back_wheels.speed = speed
+
+    def update(self):
+        start_time = time.perf_counter()
+        _iter = 0
+
+        while True:
+            time.sleep(1e-9)
+            if self.stopped:
+                return
+
+            if time.perf_counter() - start_time > self.period * _iter:
+                logging.info(f"iteration {_iter}")
+                _, frame = self.car.camera.read()
+                self.objects = self.process_objects_on_road(frame)
+
+                _iter += 1
+
+    def process_objects_on_road(self, frame):
+        # Main entry point of the Road Object Handler
+        logging.debug("Processing objects..........................")
+
+        start_time = time.perf_counter()
+        objects = self.detect_objects(frame)
+        duration = (time.perf_counter() - start_time) * 1000
+
+        logging.debug(
+            f"Processing objects END. Duration: {round(duration, 2)}...."
+        )
+        self.durations.append(duration)
+
+        self.control_car(objects)
+
+        return objects
+
+    def detect_objects(self, frame):
+        logging.debug("Detecting objects...")
+
+        # call tpu for inference
+        frame_RGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        img_pil = Image.fromarray(frame_RGB)
+        _, scale = common.set_resized_input(
+            self.interpreter,
+            img_pil.size,
+            lambda size: img_pil.resize(size, Image.Resampling.LANCZOS),
+        )
+        self.interpreter.invoke()
+        objects = detect.get_objects(
+            self.interpreter,
+            score_threshold=self.min_confidence,
+            image_scale=scale,
+        )
+
+        return objects
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@ from pprint import pprint
 import time
 import collections
 
+import cv2
 import numpy as np
 from PIL import Image
 
@@ -41,17 +42,17 @@ class ModelRunner:
         for interpreter in self.interpreters:
             interpreter.allocate_tensors()
 
-    def invoke_all(self, image, task=None):
+    def invoke_all(self, image, task):
         # this function will be executed for warmup interpreter
         self.cur_idx = 0
 
         for _ in range(len(self.interpreters)):
-            self.invoke_and_next(image, task=task)
+            self.invoke_and_next(image, task)
 
-    def invoke_and_next(self, image, task=None):
+    def invoke_and_next(self, image, task):
         assert self.cur_idx < len(self.interpreters)
 
-        self.invoke_idx(self.cur_idx, image, task=task)
+        self.invoke_idx(self.cur_idx, image, task)
 
         if self.cur_idx < len(self.interpreters) - 1:
             self.cur_idx += 1
@@ -64,11 +65,11 @@ class ModelRunner:
         else:
             raise Exception("wired index...")
 
-    def invoke_idx(self, idx, image, task=None, profile=False):
+    def invoke_idx(self, idx, image, task, profile=False):
         interpreter = self.interpreters[idx]
 
-        if image:
-            h2d_dur = self.set_input(idx, image, task=task, profile=profile)
+        if image is not None:
+            h2d_dur = self.set_input(idx, image, task, profile=profile)
 
         exec_dur = self.invoke(interpreter, profile=profile)
         d2h_dur = self.update_intermediate(interpreter, profile=profile)
@@ -76,32 +77,44 @@ class ModelRunner:
         if profile:
             return [h2d_dur, exec_dur, d2h_dur]
 
-    def set_input(self, idx, image, task=None, profile=False):
+    def set_input(self, idx, image, task, profile=False):
         if idx == 0:
-            duration = self.set_first_input(image, task=task, profile=profile)
+            duration = self.set_first_input(image, task, profile=profile)
         else:
-            duration = self.set_general_input(self.interpreters[idx], profile=profile)
+            duration = self.set_general_input(
+                self.interpreters[idx], profile=profile
+            )
 
         if profile:
             return duration
 
-    def set_first_input(self, image, task=None, profile=False):
+    def set_first_input(self, image, task, profile=False):
         if profile:
             st = time.perf_counter()
 
-        if task == None:
-            input_details = self.interpreters[0].get_input_details()
-            for input_detail in input_details:
-                if input_detail["name"] == "images":
-                    tensor_index = input_detail["index"]
-                    self.interpreters[0].set_tensor(tensor_index, image)
+        if task == "classification":
+            pass
+            # process for single frame image
+            # image = np.resize(image, [*self.size, 3])[np.newaxis, :]
+
+            # input_details = self.interpreters[0].get_input_details()
+            # for input_detail in input_details:
+            #     if input_detail["name"] == "images":
+            #         tensor_index = input_detail["index"]
+            #         self.interpreters[0].set_tensor(tensor_index, image)
 
         elif task == "detection":
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            image = Image.fromarray(image)
+
             self.set_resized_input(
                 self.interpreters[0],
                 image.size,
                 lambda size: image.resize(size, Image.ANTIALIAS),
             )
+
+        else:
+            raise Exception("unsupported task")
 
         if profile:
             duration = (time.perf_counter() - st) * 1000
@@ -112,7 +125,9 @@ class ModelRunner:
         w, h = size
         scale = min(width / w, height / h)
         w, h = int(w * scale), int(h * scale)
-        tensor = interpreter.tensor(interpreter.get_input_details()[0]["index"])()[0]
+        tensor = interpreter.tensor(
+            interpreter.get_input_details()[0]["index"]
+        )()[0]
         tensor.fill(0)
         _, _, channel = tensor.shape
         result = resize((w, h))
@@ -160,23 +175,27 @@ class ModelRunner:
             duration = (time.perf_counter() - st) * 1000
             return duration
 
-    def get_result(self, task=None, top_n=1, image_scale=(1.0, 1.0)):
+    def get_result(self, task, top_n=1, thres=0.5):
         out = list(self.intermediate.items())
         # assert len(out) == 1
 
         _, values = out[0]
-        scores = self.scale * (values[0].astype(np.int64) - self.zero_point)
-        if task == None:
+        result = None
+        if task == "classification":
+            scores = self.scale * (
+                values[0].astype(np.int64) - self.zero_point
+            )
             classes = classify.get_classes_from_scores(scores, top_n, 0.0)
             result = {labels.get(c.id, c.id): c.score for c in classes}
+
         elif task == "detection":
-            result = self.get_objects(image_scale=image_scale)
+            result = self.get_objects(thres=thres)
 
         self.intermediate = dict()
 
         return result
 
-    def get_objects(self, score_threshold=-float("inf"), image_scale=(1.0, 1.0)):
+    def get_objects(self, thres=0.5):
         Object = collections.namedtuple("Object", ["id", "score", "bbox"])
 
         def make(i):
@@ -196,9 +215,13 @@ class ModelRunner:
             if len(signature_list) > 1:
                 raise ValueError("Only support model with one signature.")
             signature = signature_list[next(iter(signature_list))]
-            count = int(interpreter.tensor(signature["outputs"]["output_0"])()[0])
+            count = int(
+                interpreter.tensor(signature["outputs"]["output_0"])()[0]
+            )
             scores = interpreter.tensor(signature["outputs"]["output_1"])()[0]
-            class_ids = interpreter.tensor(signature["outputs"]["output_2"])()[0]
+            class_ids = interpreter.tensor(signature["outputs"]["output_2"])()[
+                0
+            ]
             boxes = interpreter.tensor(signature["outputs"]["output_3"])()[0]
         elif common.output_tensor(interpreter, 3).size == 1:
             boxes = common.output_tensor(interpreter, 0)[0]
@@ -216,4 +239,4 @@ class ModelRunner:
         sx, sy = width / image_scale_x, height / image_scale_y
         self.cur_det_scale = None
 
-        return [make(i) for i in range(count) if scores[i] >= score_threshold]
+        return [make(i) for i in range(count) if scores[i] >= thres]

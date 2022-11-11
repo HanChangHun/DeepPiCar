@@ -9,5 +9,7 @@
         "*_test.py"
     ],
     "python.testing.pytestEnabled": false,
-    "python.testing.unittestEnabled": true
+    "python.testing.unittestEnabled": true,
+    "editor.minimap.maxColumn": 79,
+    "python.formatting.provider": "black"
 }

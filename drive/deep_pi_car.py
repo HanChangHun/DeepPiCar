@@ -5,6 +5,7 @@ import logging
 import datetime
 import argparse
 from pathlib import Path
+from threading import Lock
 
 import cv2
 import picar
@@ -15,54 +16,78 @@ from drive.video_recoder import VideoRecoder
 from scheduler.edgetpu_scheduler import EdgeTPUScheduler
 
 from object_detection_model.objects_detection_model import ObjectDetectionModel
+from interference_model.interference_model import InterferenceModel
 
 
 class DeepPiCar:
     def __init__(
-        self, speed_limit=0, show_image=False, video_save_dir=Path("drive/data")
+        self,
+        speed_limit=0,
+        show_image=False,
+        video_save_dir=Path("drive/data"),
     ):
+
         """Init camera and wheels"""
         logging.info("Creating a DeepPiCar...")
         self.speed_limit = speed_limit
         self.show_image = show_image
         picar.setup()
 
-        logging.debug("Set up camera")
-        self.screen_width = 854
-        self.screen_height = 480
-        self.fps = 10.0
+        logging.info("Set up video stream and recoder")
+        screen_width = 854
+        screen_height = 480
+        fps = 10.0
 
-        logging.debug("Set up video stream and recoder")
         date_str = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
         self.out_dir = Path(video_save_dir / f"{date_str}")
         self.out_dir.mkdir(exist_ok=True, parents=True)
 
         self.camera = WebcamVideoStream(
-            -1, self.screen_width, self.screen_height, self.fps
+            -1, screen_width, screen_height, fps
         ).start()
         self.video_recoder = VideoRecoder(
-            self.camera, self.out_dir / "video.avi", self.fps
+            self.camera, self.out_dir / "video.avi", fps
         ).start()
 
-        logging.debug("Set up back wheels")
+        logging.info("Set up back wheels")
         self.back_wheels = picar.back_wheels.Back_Wheels()
         self.back_wheels.speed = 0  # Speed Range is 0 (stop) - 100 (fastest)
 
-        logging.debug("Set up front wheels")
+        logging.info("Set up front wheels")
         self.front_wheels = picar.front_wheels.Front_Wheels()
         self.front_wheels.turning_offset = 5  # calibrate servo to center
-        self.front_wheels.turn(
-            90
-        )  # Steering Range is 45 (left) - 90 (center) - 135 (right)
+        # Steering Range is 45 (left) - 90 (center) - 135 (right)
+        self.front_wheels.turn(90)
 
-        self.edgetpu_scheduler = EdgeTPUScheduler()
+        logging.info("Set up Edge TPU scheduler")
+        self.lock = Lock()
+        self.edgetpu_scheduler = EdgeTPUScheduler(self.lock).start()
 
-        logging.debug("Set up object detection model")
-        self.obj_det_model_path = (
-            "experiments/obj_det_sram/models/full/efficientdet-lite_edgetpu.tflite"
-        )
+        logging.info("Set up object detection model")
+        det_period = 0.2
+        obj_det_model_paths = [
+            "experiments/co_compile_obj_cls/model/efficientdet-lite_edgetpu.tflite"
+        ]
         self.obj_det_model = ObjectDetectionModel(
-            self, model_path=self.obj_det_model_path, speed_limit=self.speed_limit
+            self,
+            "efficientdet-lite0",
+            det_period,
+            obj_det_model_paths,
+            self.edgetpu_scheduler,
+            self.speed_limit,
+        ).start()
+
+        logging.info("Set up interference classification model")
+        cls_period = 0.25
+        cls_segment_paths = [
+            "experiments/co_compile_obj_cls/model/efficientnet-M_edgetpu.tflite"
+        ]
+        self.cls_model = InterferenceModel(
+            self,
+            "efficientnet-M",
+            cls_period,
+            cls_segment_paths,
+            self.edgetpu_scheduler,
         ).start()
 
         logging.info("Created a DeepPiCar")
@@ -74,7 +99,9 @@ class DeepPiCar:
 
     def __exit__(self, _type, value, traceback):
         if traceback is not None:
-            logging.error("Exiting with statement with exception %s" % traceback)
+            logging.error(
+                "Exiting with statement with exception %s" % traceback
+            )
 
         self.cleanup()
 
@@ -83,8 +110,10 @@ class DeepPiCar:
         logging.info("Stopping the car, resetting hardware.")
         self.back_wheels.speed = 0
         self.front_wheels.turn(90)
+        self.cls_model.release()
         self.obj_det_model.release()
         self.video_recoder.release()
+        self.edgetpu_scheduler.release()
         self.camera.release()
         with open(self.out_dir / "objects.json", "w") as f:
             json.dump(self.obj_results, f, indent=4)
@@ -99,8 +128,11 @@ class DeepPiCar:
             # _, frame = self.camera.read()
             # show_image("orig", frame, self.show_image)
 
-            objects, frame_obj = self.obj_det_model.read()
-            obj_result = {"frame_cnt": self.video_recoder.frame_cnt, "objects": objects}
+            objects = self.obj_det_model.read()
+            obj_result = {
+                "frame_cnt": self.video_recoder.frame_cnt,
+                "objects": objects,
+            }
             self.obj_results.append(obj_result)
             # show_image("Detected Objects", frame_obj, self.show_image)
 
@@ -130,10 +162,10 @@ def main():
             car.drive(speed)
         except KeyboardInterrupt:
             car.cleanup()
-            print_statistics(car)
+            # print_statistics(car)
             sys.exit(0)
 
-        print_statistics(car)
+        # print_statistics(car)
 
 
 if __name__ == "__main__":
