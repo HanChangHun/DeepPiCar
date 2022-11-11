@@ -10,7 +10,6 @@ from PIL import Image
 
 from pycoral.adapters import common
 from pycoral.adapters import detect
-from pycoral.utils.edgetpu import make_interpreter
 from pycoral.utils.dataset import read_label_file
 
 from scheduler.edgetpu_scheduler import EdgeTPUScheduler

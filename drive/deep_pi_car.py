@@ -78,9 +78,9 @@ class DeepPiCar:
         ).start()
 
         logging.info("Set up interference classification model")
-        cls_period = 0.25
+        cls_period = 0.5
         cls_segment_paths = [
-            "experiments/co_compile_obj_cls/model/efficientnet-M_edgetpu.tflite"
+            "experiments/co_compile_obj_cls/model/tfhub_tf2_resnet_50_imagenet_ptq_edgetpu.tflite"
         ]
         self.cls_model = InterferenceModel(
             self,
