@@ -42,9 +42,7 @@ class DeepPiCar:
         self.out_dir = Path(video_save_dir / f"{date_str}")
         self.out_dir.mkdir(exist_ok=True, parents=True)
 
-        self.camera = WebcamVideoStream(
-            -1, screen_width, screen_height, fps
-        ).start()
+        self.camera = WebcamVideoStream(-1, screen_width, screen_height, fps).start()
         self.video_recoder = VideoRecoder(
             self.camera, self.out_dir / "video.avi", fps
         ).start()
@@ -80,7 +78,7 @@ class DeepPiCar:
         logging.info("Set up interference classification model")
         cls_period = 0.5
         cls_segment_paths = [
-            "experiments/co_compile_obj_cls/model/tfhub_tf2_resnet_50_imagenet_ptq_edgetpu.tflite"
+            "experiments/co_compile_obj_cls/model/baseline/inception_v2_224_quant_edgetpu.tflite"
         ]
         self.cls_model = InterferenceModel(
             self,
@@ -99,9 +97,7 @@ class DeepPiCar:
 
     def __exit__(self, _type, value, traceback):
         if traceback is not None:
-            logging.error(
-                "Exiting with statement with exception %s" % traceback
-            )
+            logging.error("Exiting with statement with exception %s" % traceback)
 
         self.cleanup()
 
