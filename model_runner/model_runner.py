@@ -143,9 +143,9 @@ class ModelRunner:
         input_details = interpreter.get_input_details()
         # print("---")
         # pprint(input_details)
-        print("---")
-        pprint(list(self.intermediate.keys()))
-        print("---")
+        # print("---")
+        # pprint(list(self.intermediate.keys()))
+        # print("---")
         for input_detail in input_details:
             for k, v in self.intermediate.items():
                 if input_detail["name"] == k:
@@ -179,14 +179,15 @@ class ModelRunner:
         out = list(self.intermediate.items())
         # assert len(out) == 1
 
-        _, values = out[0]
         result = None
         if task == "classification":
-            scores = self.scale * (
-                values[0].astype(np.int64) - self.zero_point
-            )
-            classes = classify.get_classes_from_scores(scores, top_n, 0.0)
-            result = {labels.get(c.id, c.id): c.score for c in classes}
+            # _, values = out[0]
+            # scores = self.scale * (
+            #     values[0].astype(np.int64) - self.zero_point
+            # )
+            # classes = classify.get_classes_from_scores(scores, top_n, 0.0)
+            # result = {labels.get(c.id, c.id): c.score for c in classes}
+            result = "classification"
 
         elif task == "detection":
             result = self.get_objects(thres=thres)

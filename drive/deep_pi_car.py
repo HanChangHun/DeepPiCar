@@ -42,7 +42,9 @@ class DeepPiCar:
         self.out_dir = Path(video_save_dir / f"{date_str}")
         self.out_dir.mkdir(exist_ok=True, parents=True)
 
-        self.camera = WebcamVideoStream(-1, screen_width, screen_height, fps).start()
+        self.camera = WebcamVideoStream(
+            -1, screen_width, screen_height, fps
+        ).start()
         self.video_recoder = VideoRecoder(
             self.camera, self.out_dir / "video.avi", fps
         ).start()
@@ -62,9 +64,14 @@ class DeepPiCar:
         self.edgetpu_scheduler = EdgeTPUScheduler(self.lock).start()
 
         logging.info("Set up object detection model")
-        det_period = 0.2
+        det_period = 0.33
+        # baseline
         obj_det_model_paths = [
-            "experiments/co_compile_obj_cls/model/efficientdet-lite_edgetpu.tflite"
+            "experiments/co_compile_obj_cls/model/baseline/efficientdet-lite_edgetpu.tflite"
+        ]
+        # ours
+        obj_det_model_paths = [
+            "experiments/co_compile_obj_cls/model/ours/efficientdet-lite_edgetpu.tflite"
         ]
         self.obj_det_model = ObjectDetectionModel(
             self,
@@ -76,10 +83,21 @@ class DeepPiCar:
         ).start()
 
         logging.info("Set up interference classification model")
-        cls_period = 0.5
+        cls_period = 1
+        # baseline
         cls_segment_paths = [
             "experiments/co_compile_obj_cls/model/baseline/inception_v2_224_quant_edgetpu.tflite"
         ]
+        # ours
+        cls_segment_paths = [
+            "experiments/co_compile_obj_cls/model/ours/segmented/inception_v2_224_quant/inception_v2_224_quant_segment_0_of_6_edgetpu.tflite",
+            "experiments/co_compile_obj_cls/model/ours/segmented/inception_v2_224_quant/inception_v2_224_quant_segment_1_of_6_edgetpu.tflite",
+            "experiments/co_compile_obj_cls/model/ours/segmented/inception_v2_224_quant/inception_v2_224_quant_segment_2_of_6_edgetpu.tflite",
+            "experiments/co_compile_obj_cls/model/ours/segmented/inception_v2_224_quant/inception_v2_224_quant_segment_3_of_6_edgetpu.tflite",
+            "experiments/co_compile_obj_cls/model/ours/segmented/inception_v2_224_quant/inception_v2_224_quant_segment_4_of_6_edgetpu.tflite",
+            "experiments/co_compile_obj_cls/model/ours/segmented/inception_v2_224_quant/inception_v2_224_quant_segment_5_of_6_edgetpu.tflite",
+        ]
+
         self.cls_model = InterferenceModel(
             self,
             "efficientnet-M",
@@ -90,6 +108,14 @@ class DeepPiCar:
 
         logging.info("Created a DeepPiCar")
 
+        time.sleep(5)
+        self.edgetpu_scheduler.waiting_queue = []
+        with open("scheduler/result/classification.log", "w") as f:
+            f.write("")
+
+        with open("scheduler/result/detection.log", "w") as f:
+            f.write("")
+
         self.obj_results = []
 
     def __enter__(self):
@@ -97,7 +123,9 @@ class DeepPiCar:
 
     def __exit__(self, _type, value, traceback):
         if traceback is not None:
-            logging.error("Exiting with statement with exception %s" % traceback)
+            logging.error(
+                "Exiting with statement with exception %s" % traceback
+            )
 
         self.cleanup()
 

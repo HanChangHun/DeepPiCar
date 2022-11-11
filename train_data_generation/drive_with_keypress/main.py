@@ -20,7 +20,12 @@ class KeypressDrive:
 
         picar.setup()
 
-        self.video_stream = WebcamVideoStream(-1).start()
+        screen_width = 854
+        screen_height = 480
+        fps = 10.0
+        self.camera = WebcamVideoStream(
+            -1, screen_width, screen_height, fps
+        ).start()
 
         self.cur_angle = 90
         self.cur_speed = 0
@@ -41,16 +46,19 @@ class KeypressDrive:
     def cleanup(self):
         self.back_wheels.speed = 0
         self.front_wheels.turn(90)
-        self.video_stream.stop()
+        self.camera.release()
         cv2.destroyAllWindows()
 
     def set_speed(self, speed):
         self.back_wheels.speed = speed
 
     def write_data(self):
-        image = self.video_stream.read()
+        _, image = self.camera.read()
         cv2.imwrite(
-            str(self.lab_dir / f"frame_{self.idx:06}_{int(self.cur_angle + 0.5)}.JPEG"),
+            str(
+                self.lab_dir
+                / f"frame_{self.idx:06}_{int(self.cur_angle + 0.5)}.JPEG"
+            ),
             image,
         )
         self.idx += 1
