@@ -30,10 +30,11 @@ class DistanceEstimator:
         self.cam_mtx = np.array(cal_vals["camera_matrix"])
         self.distor_factor = np.array(cal_vals["dist_coeff"])
 
-        self.aruco_dict = aruco.Dictionary_get(aruco.DICT_APRILTAG_36h11)
+        # self.aruco_dict = aruco.Dictionary_get(aruco.DICT_APRILTAG_36h11)
+        self.aruco_dict = aruco.Dictionary_get(cv2.aruco.DICT_4X4_250)
 
     def process_tag(self, image):
-        marker_length = 0.08
+        marker_length = 0.1
         corners, ids, _ = aruco.detectMarkers(image, self.aruco_dict)
         rvec, tvec, _ = aruco.estimatePoseSingleMarkers(
             corners, marker_length, self.cam_mtx, self.distor_factor

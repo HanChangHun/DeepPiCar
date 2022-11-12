@@ -62,7 +62,7 @@ class EdgeTPUScheduler:
 
     def sort_waiting_queue(self):
         sort_algo = "rm"
-        # sort_algo = "fifo"
+        sort_algo = "fifo"
         if sort_algo == "rm":
             self.lock.acquire()
             self.waiting_queue.sort(

@@ -54,7 +54,7 @@ class DeepPiCar:
 
         logging.info("Set up front wheels")
         self.front_wheels = picar.front_wheels.Front_Wheels()
-        self.front_wheels.turning_offset = 7  # calibrate servo to center
+        self.front_wheels.turning_offset = 12  # calibrate servo to center
         # Steering Range is 45 (left) - 90 (center) - 135 (right)
         self.front_wheels.turn(90)
 
@@ -106,7 +106,7 @@ class DeepPiCar:
         ).start()
 
         logging.info("Created a DeepPiCar")
-        time.sleep(5)
+        time.sleep(10)
 
         self.obj_results = []
 
@@ -137,7 +137,7 @@ class DeepPiCar:
         logging.info("Starting to drive at speed %s..." % speed)
         self.back_wheels.speed = speed
 
-        self.edgetpu_scheduler.init_logs()
+        # self.edgetpu_scheduler.init_logs()
 
         while self.camera.isOpened():
             time.sleep(1e-4)
