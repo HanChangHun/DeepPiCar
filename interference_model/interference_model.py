@@ -47,7 +47,7 @@ class InterferenceModel:
         def send_request_loop(start_time):
             _iter = 0
             while True:
-                time.sleep(1e-9)
+                time.sleep(1e-4)
                 if self.stopped:
                     return
 

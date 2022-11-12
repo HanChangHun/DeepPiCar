@@ -42,9 +42,7 @@ class DeepPiCar:
         self.out_dir = Path(video_save_dir / f"{date_str}")
         self.out_dir.mkdir(exist_ok=True, parents=True)
 
-        self.camera = WebcamVideoStream(
-            -1, screen_width, screen_height, fps
-        ).start()
+        self.camera = WebcamVideoStream(-1, screen_width, screen_height, fps).start()
         self.video_recoder = VideoRecoder(
             self.camera, self.out_dir / "video.avi", fps
         ).start()
@@ -108,14 +106,6 @@ class DeepPiCar:
 
         logging.info("Created a DeepPiCar")
 
-        time.sleep(5)
-        self.edgetpu_scheduler.waiting_queue = []
-        with open("scheduler/result/classification.log", "w") as f:
-            f.write("")
-
-        with open("scheduler/result/detection.log", "w") as f:
-            f.write("")
-
         self.obj_results = []
 
     def __enter__(self):
@@ -123,9 +113,7 @@ class DeepPiCar:
 
     def __exit__(self, _type, value, traceback):
         if traceback is not None:
-            logging.error(
-                "Exiting with statement with exception %s" % traceback
-            )
+            logging.error("Exiting with statement with exception %s" % traceback)
 
         self.cleanup()
 
@@ -147,8 +135,10 @@ class DeepPiCar:
         logging.info("Starting to drive at speed %s..." % speed)
         self.back_wheels.speed = speed
 
+        self.edgetpu_scheduler.init_logs()
+
         while self.camera.isOpened():
-            time.sleep(1e-9)
+            time.sleep(1e-4)
             # _, frame = self.camera.read()
             # show_image("orig", frame, self.show_image)
 

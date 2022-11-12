@@ -67,7 +67,7 @@ class ObjectDetectionModel(object):
         def send_request_loop(start_time):
             _iter = 0
             while True:
-                time.sleep(1e-9)
+                time.sleep(1e-4)
                 if self.stopped:
                     return
 
@@ -136,9 +136,7 @@ class ObjectDetectionModel(object):
             self.set_speed(0)
         else:
             self.set_speed(self.speed_limit)
-        logging.debug(
-            "Current Speed = %d, New Speed = %d" % (old_speed, self.speed)
-        )
+        logging.debug("Current Speed = %d, New Speed = %d" % (old_speed, self.speed))
 
         if self.speed == 0:
             logging.debug("full stop for 1 seconds")
@@ -155,7 +153,7 @@ class ObjectDetectionModel(object):
         _iter = 0
 
         while True:
-            time.sleep(1e-9)
+            time.sleep(1e-4)
             if self.stopped:
                 return
 
@@ -174,9 +172,7 @@ class ObjectDetectionModel(object):
         objects = self.detect_objects(frame)
         duration = (time.perf_counter() - start_time) * 1000
 
-        logging.debug(
-            f"Processing objects END. Duration: {round(duration, 2)}...."
-        )
+        logging.debug(f"Processing objects END. Duration: {round(duration, 2)}....")
         self.durations.append(duration)
 
         self.control_car(objects)

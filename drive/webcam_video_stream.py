@@ -42,7 +42,7 @@ class WebcamVideoStream:
     def update(self):
         # keep looping infinitely until the thread is stopped
         while True:
-            time.sleep(1e-9)
+            time.sleep(1e-4)
             # if the thread indicator variable is set, stop the thread
             if self.stopped:
                 self.stream.release()

@@ -14,11 +14,7 @@ class EdgeTPUScheduler:
         self.task_results = {}
 
         self.stopped = False
-        with open("scheduler/result/classification.log", "w") as f:
-            f.write("")
-
-        with open("scheduler/result/detection.log", "w") as f:
-            f.write("")
+        self.init_logs()
 
     def start(self):
         self.start_execute_request()
@@ -26,6 +22,13 @@ class EdgeTPUScheduler:
 
     def release(self):
         self.stopped = True
+
+    def init_logs(self):
+        self.edgetpu_scheduler.waiting_queue = []
+        with open("scheduler/result/classification.log", "w") as f:
+            f.write("")
+        with open("scheduler/result/detection.log", "w") as f:
+            f.write("")
 
     def add_model_runner(self, task_name, task, period, segment_paths):
         model_runner = ModelRunner(segment_paths)
@@ -39,7 +42,7 @@ class EdgeTPUScheduler:
     def start_execute_request(self):
         def execute_request_loop():
             while True:
-                time.sleep(1e-9)
+                time.sleep(1e-4)
                 if self.stopped:
                     return
                 self.execute_request()
@@ -88,15 +91,11 @@ class EdgeTPUScheduler:
 
             if task == "classification":
                 with open("scheduler/result/classification.log", "a") as f:
-                    f.write(
-                        f"{time.perf_counter() - request['request_time']}\n"
-                    )
+                    f.write(f"{time.perf_counter() - request['request_time']}\n")
 
             elif task == "detection":
                 with open("scheduler/result/detection.log", "a") as f:
-                    f.write(
-                        f"{time.perf_counter() - request['request_time']}\n"
-                    )
+                    f.write(f"{time.perf_counter() - request['request_time']}\n")
 
         else:
             self.reappend_request(request)
