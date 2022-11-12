@@ -33,7 +33,7 @@ class DistanceEstimator:
         self.aruco_dict = aruco.Dictionary_get(aruco.DICT_APRILTAG_36h11)
 
     def process_tag(self, image):
-        marker_length = 0.1
+        marker_length = 0.08
         corners, ids, _ = aruco.detectMarkers(image, self.aruco_dict)
         rvec, tvec, _ = aruco.estimatePoseSingleMarkers(
             corners, marker_length, self.cam_mtx, self.distor_factor
@@ -41,13 +41,13 @@ class DistanceEstimator:
 
         if ids is not None:
             for _ in range(0, ids.size):
-                aruco.drawAxis(
-                    image, self.cam_mtx, self.distor_factor, rvec[0], tvec[0], 0.06
-                )
+                # aruco.drawAxis(
+                #    image, self.cam_mtx, self.distor_factor, rvec[0], tvec[0], 0.06
+                # )
                 cv2.putText(
                     image,
                     "%.1f cm" % (tvec[0][0][2] * 100),
-                    (10, self.height + 50),
+                    (10, self.height - 20),
                     cv2.FONT_HERSHEY_SIMPLEX,
                     1,
                     (0, 0, 255),
@@ -75,8 +75,7 @@ class ObjectDetectionVisualizer:
         frame_RGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img_pil = Image.fromarray(frame_RGB)
 
-        scale_factor = self.width / img_pil.width
-        self.draw_objects(ImageDraw.Draw(img_pil), scale_factor, self.labels)
+        self.draw_objects(ImageDraw.Draw(img_pil), 1, self.labels)
 
         return cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 
@@ -115,13 +114,19 @@ def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument("-v", "--video", type=str, help="e.g. /path/to/video/video.mp4")
-    parser.add_argument(
-        "-d", "--data", type=str, help="e.g. /path/to/video/objects.json"
-    )
+    # parser.add_argument("-v", "--video", type=str, help="e.g. /path/to/video/video.mp4")
+    # parser.add_argument(
+    #    "-d", "--data", type=str, help="e.g. /path/to/video/objects.json"
+    # )
+    parser.add_argument("-p", "--path", type=str)
     args = parser.parse_args()
-    video_path = args.video
-    data_path = args.data
+    result_dir = Path(args.path)
+    video_path = str(result_dir / "video.avi")
+    data_path = result_dir / "objects.json"
+
+    width = 854
+    height = 480
+    fps = 20.0
 
     cap = cv2.VideoCapture(video_path)
 
@@ -134,12 +139,12 @@ def main():
     obj_det_model_path = (
         "experiments/obj_det_sram/models/full/efficientdet-lite_edgetpu.tflite"
     )
-    obj_det_vis = ObjectDetectionVisualizer(obj_det_model_path, 640, 360)
-    dist_estimator = DistanceEstimator(640, 360)
+    obj_det_vis = ObjectDetectionVisualizer(obj_det_model_path, width, height)
+    dist_estimator = DistanceEstimator(width, height)
 
     res_save_path = video_path.replace(".avi", "_vis.avi")
     fourcc = cv2.VideoWriter_fourcc(*"DIVX")
-    video_res = create_video_recorder(res_save_path, fourcc, 10, cap)
+    video_res = create_video_recorder(res_save_path, fourcc, fps, cap)
 
     cnt = 0
     while cap.isOpened():
@@ -150,8 +155,8 @@ def main():
                     if obj["frame_cnt"] == cnt:
                         obj_det_vis.update_obj(obj["objects"])
 
-            frame = obj_det_vis.detect_objects(frame)
             frame = dist_estimator.process_tag(frame)
+            frame = obj_det_vis.detect_objects(frame)
             video_res.write(frame)
         else:
             break

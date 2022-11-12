@@ -112,7 +112,6 @@ class ObjectDetectionModel(object):
         logging.debug(f"{len(objects)} objects are found")
         for obj in objects:
             if obj != []:
-                print(1)
                 obj_label = self.labels[obj.id]
                 processor = self.traffic_objects[obj.id]
                 if processor.is_close_by(obj):

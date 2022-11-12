@@ -49,11 +49,12 @@ class DeepPiCar:
 
         logging.info("Set up back wheels")
         self.back_wheels = picar.back_wheels.Back_Wheels()
-        self.back_wheels.speed = 0  # Speed Range is 0 (stop) - 100 (fastest)
+        self.back_wheels.speed = 0 # Speed Range is 0 (stop) - 100 (fastest)
+        self.back_wheels.backward()
 
         logging.info("Set up front wheels")
         self.front_wheels = picar.front_wheels.Front_Wheels()
-        self.front_wheels.turning_offset = 5  # calibrate servo to center
+        self.front_wheels.turning_offset = 7  # calibrate servo to center
         # Steering Range is 45 (left) - 90 (center) - 135 (right)
         self.front_wheels.turn(90)
 
@@ -63,13 +64,13 @@ class DeepPiCar:
 
         logging.info("Set up object detection model")
         det_period = 0.33
-        # baseline
-        obj_det_model_paths = [
-            "experiments/co_compile_obj_cls/model/baseline/efficientdet-lite_edgetpu.tflite"
-        ]
         # ours
         obj_det_model_paths = [
             "experiments/co_compile_obj_cls/model/ours/efficientdet-lite_edgetpu.tflite"
+        ]
+        # baseline
+        obj_det_model_paths = [
+            "experiments/co_compile_obj_cls/model/baseline/efficientdet-lite_edgetpu.tflite"
         ]
         self.obj_det_model = ObjectDetectionModel(
             self,
@@ -81,11 +82,7 @@ class DeepPiCar:
         ).start()
 
         logging.info("Set up interference classification model")
-        cls_period = 1
-        # baseline
-        cls_segment_paths = [
-            "experiments/co_compile_obj_cls/model/baseline/inception_v2_224_quant_edgetpu.tflite"
-        ]
+        cls_period = 1.5 
         # ours
         cls_segment_paths = [
             "experiments/co_compile_obj_cls/model/ours/segmented/inception_v2_224_quant/inception_v2_224_quant_segment_0_of_6_edgetpu.tflite",
@@ -94,6 +91,10 @@ class DeepPiCar:
             "experiments/co_compile_obj_cls/model/ours/segmented/inception_v2_224_quant/inception_v2_224_quant_segment_3_of_6_edgetpu.tflite",
             "experiments/co_compile_obj_cls/model/ours/segmented/inception_v2_224_quant/inception_v2_224_quant_segment_4_of_6_edgetpu.tflite",
             "experiments/co_compile_obj_cls/model/ours/segmented/inception_v2_224_quant/inception_v2_224_quant_segment_5_of_6_edgetpu.tflite",
+        ]
+        # baseline
+        cls_segment_paths = [
+            "experiments/co_compile_obj_cls/model/baseline/inception_v2_224_quant_edgetpu.tflite"
         ]
 
         self.cls_model = InterferenceModel(
@@ -105,6 +106,7 @@ class DeepPiCar:
         ).start()
 
         logging.info("Created a DeepPiCar")
+        time.sleep(5)
 
         self.obj_results = []
 

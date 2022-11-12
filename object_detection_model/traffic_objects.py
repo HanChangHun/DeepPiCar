@@ -11,7 +11,7 @@ class TrafficObject(object):
         # default: if a sign is 10% of the height of frame
         bbox = obj.bbox
         rect_size = (bbox.xmax - bbox.xmin) * (bbox.ymax - bbox.ymin)
-        return rect_size >= 350
+        return rect_size >= 1850
 
 
 class Person(TrafficObject):
