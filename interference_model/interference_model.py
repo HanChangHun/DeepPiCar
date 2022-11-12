@@ -16,6 +16,7 @@ class InterferenceModel:
         segment_paths,
         scheduler: EdgeTPUScheduler,
     ):
+        logging.info("Creating a InterferenceModel...")
         self.car = car
         self.task_name = task_name
         self.period = period
