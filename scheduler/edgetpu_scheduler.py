@@ -24,7 +24,7 @@ class EdgeTPUScheduler:
         self.stopped = True
 
     def init_logs(self):
-        self.edgetpu_scheduler.waiting_queue = []
+        self.waiting_queue = []
         with open("scheduler/result/classification.log", "w") as f:
             f.write("")
         with open("scheduler/result/detection.log", "w") as f:
