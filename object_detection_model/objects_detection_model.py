@@ -116,12 +116,12 @@ class ObjectDetectionModel(object):
                 processor = self.traffic_objects[obj.id]
                 if processor.is_close_by(obj):
                     processor.set_car_state(car_state)
+                    self.resume_driving(car_state)
                 else:
                     logging.debug(
                         "[%s] object detected, but it is too far, ignoring. "
                         % obj_label
                     )
-                self.resume_driving(car_state)
 
         # if len(objects) == 0:
         #     car_state["speed"] = self.speed_limit
