@@ -63,14 +63,14 @@ class DeepPiCar:
         self.edgetpu_scheduler = EdgeTPUScheduler(self.lock).start()
 
         logging.info("Set up object detection model")
-        det_period = 0.33
-        # baseline
-        obj_det_model_paths = [
-            "experiments/co_compile_obj_cls/model/baseline/efficientdet-lite_edgetpu.tflite"
-        ]
+        det_period = 0.5
         # ours
         obj_det_model_paths = [
             "experiments/co_compile_obj_cls/model/ours/efficientdet-lite_edgetpu.tflite"
+        ]
+        # baseline
+        obj_det_model_paths = [
+            "experiments/co_compile_obj_cls/model/baseline/efficientdet-lite_edgetpu.tflite"
         ]
         self.obj_det_model = ObjectDetectionModel(
             self,
@@ -82,11 +82,7 @@ class DeepPiCar:
         ).start()
 
         logging.info("Set up interference classification model")
-        cls_period = 1.5 
-        # baseline
-        cls_segment_paths = [
-            "experiments/co_compile_obj_cls/model/baseline/inception_v2_224_quant_edgetpu.tflite"
-        ]
+        cls_period = 2.0
         # ours
         cls_segment_paths = [
             "experiments/co_compile_obj_cls/model/ours/segmented/inception_v2_224_quant/inception_v2_224_quant_segment_0_of_6_edgetpu.tflite",
@@ -95,6 +91,10 @@ class DeepPiCar:
             "experiments/co_compile_obj_cls/model/ours/segmented/inception_v2_224_quant/inception_v2_224_quant_segment_3_of_6_edgetpu.tflite",
             "experiments/co_compile_obj_cls/model/ours/segmented/inception_v2_224_quant/inception_v2_224_quant_segment_4_of_6_edgetpu.tflite",
             "experiments/co_compile_obj_cls/model/ours/segmented/inception_v2_224_quant/inception_v2_224_quant_segment_5_of_6_edgetpu.tflite",
+        ]
+        # baseline
+        cls_segment_paths = [
+            "experiments/co_compile_obj_cls/model/baseline/inception_v2_224_quant_edgetpu.tflite"
         ]
 
         self.cls_model = InterferenceModel(
