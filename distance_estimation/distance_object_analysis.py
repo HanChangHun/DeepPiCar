@@ -156,12 +156,13 @@ def main():
                     if obj["frame_cnt"] == cnt:
                         obj_det_vis.update_obj(obj["objects"])
 
-            frame = dist_estimator.process_tag(frame)
+            # frame = dist_estimator.process_tag(frame)
             frame = obj_det_vis.detect_objects(frame)
             video_res.write(frame)
         else:
             break
         cnt += 1
+    video_res.release()
 
 
 if __name__ == "__main__":
