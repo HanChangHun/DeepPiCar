@@ -81,9 +81,7 @@ class ModelRunner:
         if idx == 0:
             duration = self.set_first_input(image, task, profile=profile)
         else:
-            duration = self.set_general_input(
-                self.interpreters[idx], profile=profile
-            )
+            duration = self.set_general_input(self.interpreters[idx], profile=profile)
 
         if profile:
             return duration
@@ -125,9 +123,7 @@ class ModelRunner:
         w, h = size
         scale = min(width / w, height / h)
         w, h = int(w * scale), int(h * scale)
-        tensor = interpreter.tensor(
-            interpreter.get_input_details()[0]["index"]
-        )()[0]
+        tensor = interpreter.tensor(interpreter.get_input_details()[0]["index"])()[0]
         tensor.fill(0)
         _, _, channel = tensor.shape
         result = resize((w, h))
@@ -216,13 +212,9 @@ class ModelRunner:
             if len(signature_list) > 1:
                 raise ValueError("Only support model with one signature.")
             signature = signature_list[next(iter(signature_list))]
-            count = int(
-                interpreter.tensor(signature["outputs"]["output_0"])()[0]
-            )
+            count = int(interpreter.tensor(signature["outputs"]["output_0"])()[0])
             scores = interpreter.tensor(signature["outputs"]["output_1"])()[0]
-            class_ids = interpreter.tensor(signature["outputs"]["output_2"])()[
-                0
-            ]
+            class_ids = interpreter.tensor(signature["outputs"]["output_2"])()[0]
             boxes = interpreter.tensor(signature["outputs"]["output_3"])()[0]
         elif common.output_tensor(interpreter, 3).size == 1:
             boxes = common.output_tensor(interpreter, 0)[0]

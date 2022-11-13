@@ -27,7 +27,6 @@ class VideoRecoder:
             (int(self.camera.get(3)), int(self.camera.get(4))),
         )
 
-
     def start(self):
         # start the thread to read frames from the video stream
         Thread(target=self.update, args=()).start()
@@ -45,6 +44,7 @@ class VideoRecoder:
             (self.grabbed, self.frame) = self.camera.read()
             self.video.write(self.frame)
             self.frame_cnt += 1
+
     def release(self):
         # indicate that the thread should be stopped
         self.stopped = True
