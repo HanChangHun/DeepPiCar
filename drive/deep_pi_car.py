@@ -63,7 +63,7 @@ class DeepPiCar:
         self.edgetpu_scheduler = EdgeTPUScheduler(self.lock).start()
 
         logging.info("Set up object detection model")
-        det_period = 0.5
+        det_period = 0.33
         # baseline
         obj_det_model_paths = [
             "experiments/co_compile_obj_cls/model/baseline/efficientdet-lite_edgetpu.tflite"
